@@ -125,7 +125,7 @@ print(results.summary())
 - ARMAX(1,1) model : yt = x1 * zt + a1 * y(t-1) + m1 * e(t-1) + et
 - Only difference is one additonal term zt and it's coef x1
 
-####e.g where ARMAX is useful. Imagine we need to model our own daily productivity. 
+#### e.g where ARMAX is useful. Imagine we need to model our own daily productivity. 
 - This can be an ARMA model as productivity on previous day may have affect on productivity today, you could be overworked or on a row.
 - A useful **Exogenous variable** could be the amount of sleep you have got the night before, since this might affect your productivity.
 - Here **`z1`** would be the hours slept.
