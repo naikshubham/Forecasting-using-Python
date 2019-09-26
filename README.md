@@ -125,7 +125,7 @@ print(results.summary())
 - ARMAX(1,1) model : yt = x1 * zt + a1 * y(t-1) + m1 * e(t-1) + et
 - Only difference is one additonal term zt and it's coef x1
 
-#### e.g where ARMAX is useful. Imagine we need to model our own daily productivity. 
+####e.g where ARMAX is useful. Imagine we need to model our own daily productivity. 
 - This can be an ARMA model as productivity on previous day may have affect on productivity today, you could be overworked or on a row.
 - A useful **Exogenous variable** could be the amount of sleep you have got the night before, since this might affect your productivity.
 - Here **`z1`** would be the hours slept.
@@ -158,6 +158,70 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 # just an ARMA(p, q) model
 model = SARIMAX(df, order=(p, 0, q))
 ```
+- A SARIMAX model with order(p, 0, q) is same as ARMA(p, q). We can also add a constant to a model using `trend = 'c'`. If a time-series is'nt centered around zero, this is a must.
+
+```python
+# An ARMA(p, q) + constant model
+model = SARIMAX(df, order=(p, 0, q), trend = 'c')
+```
+
+#### Making one-step-ahead predictions
+
+```python
+# make prediction for last 25 values
+results = model.fit()
+
+# make in-sample prediction
+forecast = results.get_prediction(start=-25)
+```
+
+- We can use `get_prediction` method to make insample predictions.`start = -25` tells how many steps back to begin the forecast.`start=-25` means make predictions for last 25 entries of the training data.
+- The centre value of the forecast is stored in `predicted_mean` attribute of the forecast object. This predicted mean is a pandas series
+
+```python
+# forecast mean
+mean_forecast = forecast.predicted_mean
+```
+
+#### Confidence intervals
+- To get the lower and the upper limits on the values of our prediction we use the `conf_int` method of the forecast object
+
+```python
+# get confidence intervals of forecast
+confidence_intervals = forecast.conf_int()
+```
+
+#### Plotting predictions
+- We can use pyplot plot method to plot the mean values
+- We use pyplot `fill_between` to shade the area between lower and upper limits.
+
+```python
+plt.figure()
+
+# plot prediction
+plt.plot(dates, mean_forecast.values, color='red', label='forecast')
+
+# shade uncertainty area
+plt.fill_between(dates, lower_limits, upper_limits, color='pink')
+plt.show()
+```
+
+### Dynamic predictions
+We can make dynamic predictions then just one step ahead.
+
+```python
+results = model.fit()
+forecast = results.get_prediction(start=-25, dynamic=True)
+```
+
+### Forecasting out of sample
+- Finally after testing our predictions in sample, we can use our model to predict the future.
+- To get **future forecast** we use the **`get_forecast`** method. We use the **`steps`** parameter with number of steps after end of the training data to forecast upto.
+
+```python
+forecast = results.get_forecast(steps=20)
+```
+
 
 
 
