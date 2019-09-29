@@ -222,6 +222,112 @@ forecast = results.get_prediction(start=-25, dynamic=True)
 forecast = results.get_forecast(steps=20)
 ```
 
+## Introduction to ARIMA models
+- We have learnt that we cannot apply **ARMA** model to non-stationary data, we need to take the difference of the time-series to make it stationary only then we can model it.
+- However, when we do this (difference) then we will have a model that will predict difference of the time series. What we really want to predict is not the difference but the actual value of the time-series. 
+- We can acheive this by carefully transforming our prediction of the differences.
+
+### Reconstructing original time series after differencing
+- The opposite of taking the difference is taking the sum or integral.
+- We will have to use this transform to go from prediction of differenced values to prediction of absolute values.
+- We can do this transform using the `np.cumsum` function.
+
+```python
+diff_forecast = results.get_forecast(steps=10).predicted_mean
+from numpy import cumsum
+mean_forecast = cumsum(diff_forecast) + df.iloc[-1, 0]
+```
+- After applying this transform we now have a prediction of how much a time-series changed from its initial value over the forecast peroid.
+- To get the absolute value we need to add the last value of the original time series to it. We now have a forecast of the non stationary time-series.
+
+- Take the difference
+- Fit ARIMA model
+- Integrate forecast
+- Can we avoid doing so much work ? Yes!
+
+## ARIMA - Autoregressive Integrated Moving Average
+
+- We can implement ARIMA using the SARIMAX model class from statsmodel
+
+```python
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+model = SARIMAX(df, order = (p,d,q))
+```
+
+- The ARIMA model has 3 model orders
+1) p - number of autoregressive lags
+2) d - order of differencing
+3) q - number of moving average lags
+
+- In ARMA model we were setting the order d to zero. In ARIMA we pass non - differenced time-series and the model order.
+
+```python
+model = SARIMAX(df, order=(2, 1, 1))
+```
+- Here we difference the time series data just once and then apply an ARMA (2, 1) model
+- After we have stated the difference parameter we dont need to worry about differencing anymore.
+- The differencing and integration steps are all taken care off by the model object.
+
+```python
+# Fit model
+model.fit()
+
+# Make forecast
+mean_forecast = results.get_forecast(steps=steps).predicted_mean
+```
+
+### Picking the difference order
+- We should be careful in selecting the correct amount of differencing
+- We will decide the differening order using the Augmented Dicky Fuller test
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
