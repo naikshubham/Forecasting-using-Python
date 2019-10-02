@@ -278,8 +278,7 @@ mean_forecast = results.get_forecast(steps=steps).predicted_mean
 
 ### Picking the difference order
 - We should be careful in selecting the correct amount of differencing. We difference the data only till its stationary and no more.
-- We will decide the differening order using the Augmented Dicky Fuller test
-- 
+- We will decide the differening order using the Augmented Dicky Fuller test.
 
 
 
