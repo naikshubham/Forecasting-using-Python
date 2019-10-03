@@ -290,14 +290,14 @@ mean_forecast = results.get_forecast(steps=steps).predicted_mean
 ### ACF
 - We can plot the autocorrelation function to get the overview of the data.
 <p align="center">
-  <img src="./image/ACF.JPG" width="350" title="ACF">
+  <img src="./images/ACF.JPG" width="350" title="ACF">
 </p>
 - Bars shows that ACF values are increasing lags.If the bars are small and lie in the blue shade region, then they are not statisctically significant.
 
 ### PACF
 - Partial autocorrelation is the corelation between a time series and the lagged version of itself after we subtract the correlation at smaller lags.So it's the correlation associated with just that particular lag.
 <p align="center">
-  <img src="./image/PACF.JPG" width="350" title="PACF">
+  <img src="./images/PACF.JPG" width="350" title="PACF">
 </p>
 - PACF is these series of values.
 
@@ -307,14 +307,14 @@ mean_forecast = results.get_forecast(steps=steps).predicted_mean
 - By comparing the ACF and PACF for time-series we can deduce the model order.If the amplitude of the ACF tails off with increasing lag and the PACF cuts off after some lag p, then we have an **AR(p) model**
 - Below plot is an **AR(2) model**
 <p align="center">
-  <img src="./image/AR(2).JPG" width="350" title="AR(2)">
+  <img src="./images/AR(2).JPG" width="350" title="AR(2)">
 </p>
 
 ### MA model
 - If the amplitutde of ACF cuts off after some lag q and the amplitude of PACF tails off then we have a **MA(q) model**
 - Below is an **MA(2) model**
 <p align="center">
-  <img src="./image/MA(2).JPG" width="350" title="MA(2)">
+  <img src="./images/MA(2).JPG" width="350" title="MA(2)">
 </p>
 
 
@@ -322,13 +322,13 @@ mean_forecast = results.get_forecast(steps=steps).predicted_mean
 - If both the ACF and PACF tails off then we have an **ARMA model**. In this case, we can't deduce the model orders p & q from the plot.
 
 <p align="center">
-  <img src="./image/ARMA.JPG" width="350" title="ARMA">
+  <img src="./images/ARMA.JPG" width="350" title="ARMA">
 </p>
 
 - Refer following table when analyzing ACF and PACF
 
 <p align="center">
-  <img src="./image/ARMA(p,q).JPG" width="350" title="ARMA(p,q)">
+  <img src="./images/ARMA(p,q).JPG" width="350" title="ARMA(p,q)">
 </p>
 
 
@@ -351,6 +351,23 @@ plt.show()
 
 ## Over/under differencing ACF and PACF
 - The time-series must be made stationary before making this plot
+- If the ACF value is high and tail off very slowly, this is the sign that the data is non-stationary.So it needs to be differenced.
+
+<p align="center">
+  <img src="./images/ACF_.JPG" width="350" title="ACF_">
+</p>
+
+- If the autocorrelation at lag-1 is very negative, this is the sign that we have taken the difference too many times.
+<p align="center">
+  <img src="./images/ACF__.JPG" width="350" title="ACF__">
+</p>
+
+
+
+
+
+
+
 
 
 
