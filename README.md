@@ -278,7 +278,87 @@ mean_forecast = results.get_forecast(steps=steps).predicted_mean
 
 ### Picking the difference order
 - We should be careful in selecting the correct amount of differencing. We difference the data only till its stationary and no more.
-- We will decide the differening order using the Augmented Dicky Fuller test.
+- We will decide the differening order using the Augmented Dicky Fuller test
+
+## ACF and PACF
+- We know to fit **ARIMA** models. But how do we know which ARIMA model to fit. The model order is very important.
+- One correct way to find the order of the model is to use **ACF - Autocorrelation function** and the **PACF - Partial autocorrelation function**
+- The **autocorrelation function** at **lag-1** is the correlation between the timeseries and same time series offset by one step.
+**lag-1 autocorrelation** -> **corr(yt, y(t-1))**
+- The autocorrelation at **lag-2** is the correlation between the timeseries and same time series offset by two steps.
+
+### ACF
+- We can plot the autocorrelation function to get the overview of the data.
+<p align="center">
+  <img src="./image/ACF.JPG" width="350" title="ACF">
+</p>
+- Bars shows that ACF values are increasing lags.If the bars are small and lie in the blue shade region, then they are not statisctically significant.
+
+### PACF
+- Partial autocorrelation is the corelation between a time series and the lagged version of itself after we subtract the correlation at smaller lags.So it's the correlation associated with just that particular lag.
+<p align="center">
+  <img src="./image/PACF.JPG" width="350" title="PACF">
+</p>
+- PACF is these series of values.
+
+## Using the ACF and PACF to choose model order
+
+### AR model
+- By comparing the ACF and PACF for time-series we can deduce the model order.If the amplitude of the ACF tails off with increasing lag and the PACF cuts off after some lag p, then we have an **AR(p) model**
+- Below plot is an **AR(2) model**
+<p align="center">
+  <img src="./image/AR(2).JPG" width="350" title="AR(2)">
+</p>
+
+### MA model
+- If the amplitutde of ACF cuts off after some lag q and the amplitude of PACF tails off then we have a **MA(q) model**
+- Below is an **MA(2) model**
+<p align="center">
+  <img src="./image/MA(2).JPG" width="350" title="MA(2)">
+</p>
+
+
+### ARMA model
+- If both the ACF and PACF tails off then we have an **ARMA model**. In this case, we can't deduce the model orders p & q from the plot.
+
+<p align="center">
+  <img src="./image/ARMA.JPG" width="350" title="ARMA">
+</p>
+
+- Refer following table when analyzing ACF and PACF
+
+<p align="center">
+  <img src="./image/ARMA(p,q).JPG" width="350" title="ARMA(p,q)">
+</p>
+
+
+### Implementation in Python
+```python
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+# create figure
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8,8))
+
+# make acf plot
+# in each plot we pass the time-series dataframe and the max no of lags we would like to see. We also tell if we want to show autocorrelation at lag 0
+# the ACF and PACF at lag=0 always has a value of 1, so we set it to False
+plot_acf(df, lags=10, zero=False, ax=ax1)
+
+# make pacf plot
+plot_pacf(df, lags=10, zero=False, ax=ax2)
+plt.show()
+```
+
+## Over/under differencing ACF and PACF
+- The time-series must be made stationary before making this plot
+
+
+
+
+
+
+
+
 
 
 
