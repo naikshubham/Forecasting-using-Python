@@ -259,11 +259,14 @@ print(results[1])
 print(results)
 ```
 
+### Stationarity
+- **Strong stationarity** : entire distribution of data is time-invariant. It means that the joint distribution of the observations do not depend on time.
+- **Weak stationarity** : Mean, variance and autocorrelation are time-invariant (i.e for autocorrelation, corr(Xt, Xt-T) is only a function of T). A less restrictive version of stationarity, and one that is easier to test. Mean, variance and autocorrelations of the oberservations do not depend on time.
+- For autocorrelation, the correlation between X-t and X-(t-tau) is only a function of the lag tau, and not a function of time.
 
-
-
-
-
+#### Why do we care for stationary
+- If a process is not stationary, then it becomes difficult to model. 
+- Modeling involves estimating a set of parameters, and if a process is not stationary, and the parameters are different at each point in time, then there are too many parameters to estimate.
 
 
 
