@@ -1,6 +1,6 @@
 ### Making Time-Series stationary
 
-- Previously we plotted the data to check whether it was stationary. But there are also **Statistical tests for stationarity**
+- There are also **Statistical tests for stationarity**
 - We can also convert a non stationary dataset to stationary.
 - The most common test to identify whether a time-series is non-stationary is **augmented Dicky-Fuller test**
 
