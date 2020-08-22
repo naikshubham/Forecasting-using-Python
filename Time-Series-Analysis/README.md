@@ -266,12 +266,31 @@ print(results)
 
 #### Why do we care for stationary
 - If a process is not stationary, then it becomes difficult to model. 
-- Modeling involves estimating a set of parameters, and if a process is not stationary, and the parameters are different at each point in time, then there are too many parameters to estimate.
+- Modeling involves estimating a set of parameters, and if a process is not stationary, and the parameters are different at each point in time, then there are too many parameters to estimate. We may end up having more parameters than actual data.If parameters vary with time, too many parameters to estimate.
+- So stationarity is necessary for a parsimonious model, one with a smaller set of parameters to estimate. Can only estimate a parsimonious model with a few parameters.
 
+#### Examples of Nonstationary series
+- A random walk is a common type of non-stationary series. The variance grows with time. For e.g, if stock prices are a random walk, then the uncertainty about prices tomorrow is much less than the uncertainty 10 years from now.
+- Seasonal series are also non-stationary.
 
+#### Transforming Non stationary Series into Stationary Series
+- Many non-stationary series can be made stationary through a simple transformation. A random-walk is a non-stationary series, but if we take the first differences, the new series is White Noise, which is stationary.
 
+```python
+# random walk
+plot.plot(SPY)
 
+# first difference
+plot.plot(SPY.diff())
+```
 
+- Quarterly earnings for H&R Block, which has a large seasonal component and is therefore not stationary. If we take the `seasonal difference`, by taking the difference with lag of 4, the transformed series looks stationary.
+
+```python
+plot.plot(HRB.diff(4))
+```
+
+- Sometimes we many need to do 2 transformations. If we see amazon quarterly revenues, its growing exponentially as well as exhibiting a string seasonal pattern.
 
 
 
