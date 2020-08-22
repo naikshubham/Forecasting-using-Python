@@ -291,6 +291,32 @@ plot.plot(HRB.diff(4))
 ```
 
 - Sometimes we many need to do 2 transformations. If we see amazon quarterly revenues, its growing exponentially as well as exhibiting a string seasonal pattern.
+- First, if we take only the log of the series, we can eliminate the exponential growth.
+- But if we take both the log of the series and then the seasonal difference, the transformed series looks stationary.
+
+```python
+# log of AMZN Revenues
+plt.plot(np.log(AMZN))
+
+# log, then seasonal difference
+plt.plot(np.log(AMZN).diff(4))
+```
+
+- Many time series exhibit strong seasonal behavior. The procedure for removing the seasonal component of a time series is called seasonal adjustment. 
+- For example, most economic data published by the government is seasonally adjusted.
+- by taking first differences of a random walk, we get a stationary white noise process. For seasonal adjustments, instead of taking first differences, we can take differences with a lag corresponding to the periodicity.
+- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
