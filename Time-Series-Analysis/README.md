@@ -305,11 +305,38 @@ plt.plot(np.log(AMZN).diff(4))
 - Many time series exhibit strong seasonal behavior. The procedure for removing the seasonal component of a time series is called seasonal adjustment. 
 - For example, most economic data published by the government is seasonally adjusted.
 - by taking first differences of a random walk, we get a stationary white noise process. For seasonal adjustments, instead of taking first differences, we can take differences with a lag corresponding to the periodicity.
+
+### AR Model - Autoregressive model
+
+#### Mathematical Description of AR(1) Model
+- `Rt = mean + phi Rt-1 + noise` , Today's value equals a mean plus a fraction phi of yesterday's value, plus noise. Since there is only one lagged value on the RHS, this is called an AR model of order 1, or simply an AR(1) model.
+- If the AR parameter, phi is one, then the process is a random walk. If phi is zero the process is a white noise.**In order for the process to be stable and stationary, phi has to be between -1 to +1.**
+
+#### Interpretation of AR(1) Parameter
+- As an example, suppose Rt is a time series of stock returns. If phi is negative, then a positive return last period, at time t-1, implies that this period's return is more likely to be negative. This is reffered to as mean reversion.
+- If phi is positive, then a positive return last period implies that this period's return is expected to be positive.
+- Negative phi : **Mean Reversion** , Positive phi: **Momentum**
+
+#### Higher order AR models
+- AR(1) = mean + phi * Rt-1 + noise
+- AR(2) = mean + phi1 * Rt-2 + noise
+- AR(3) = mean + phi1 Rt-1 + phi2 Rt-2 + phi3 * Rt-3 + noise
+- The models can be extended to include more lagged values and more phi parameters.
+
+#### Simulating an AR Process
+- Often, we we want to study and understand a pure AR process, it is useful to work with simulated data. Statsmodels provides modules for simulating AR processes.
+
+```python
+from statsmodels.tsa.arima_process import ArmaProcess
+ar = np.array([1, -0.9])
+ma = np.array([1])
+AR_object = ArmaProcess(ar, ma)
+simulated_data = AR_object.generate_sample(nsample=1000)
+plt.plot(simulated_data)
+```
+
+#### Simulate AR(1) Time Series
 - 
-
-
-
-
 
 
 
