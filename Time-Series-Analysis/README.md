@@ -335,8 +335,104 @@ simulated_data = AR_object.generate_sample(nsample=1000)
 plt.plot(simulated_data)
 ```
 
-#### Simulate AR(1) Time Series
-- 
+### Estimating and Forecasting an AR model
+- Statsmodels has another module for estimating the parameters of a given AR model.
+
+#### Estimating an AR Model
+
+```python
+from statsmodels.tsa.arima_model import ARMA
+# import ARMA which is a class,and create an instance of that class called mod
+# with the arguments being the data that we're trying to fit, and order of the model
+mod = ARMA(simulated_data, order=(1,0))
+result = mod.fit()
+print(result.summary()) # to see the full output check for mean and phi
+print(result.params) # to just see the coefficients
+```
+- The order(1,0) means we're fitting the data to an AR(1) model. An order(2,0) would mean we're fitting the data to an AR(2) model.
+
+#### Forecast an AR model
+- To do forecasting, both in sample and out of sample, we still create an instance of the class using ARMA, and we use the fit method.
+- Use the method `plot_predict` to do forecasting. **We give it the start and end points for fitting**.
+- If the index of the data is a DatetimeIndex object, we can pick dates for the start and end dates.
+- The plot also gives confidence intervals around the out-of-sample forecasts. Notice how the confidence interval gets wider the farther out the forecast is.
+- The in-sample is a forecast of the next data point using the data up to that point, and the out-of-sample forecasts any number of data points in the future.  
+
+```python
+from statsmodels.tsa.arma_model import ARMA
+mod = ARMA(simulated_data order=(1,0))
+res = mod.fit()
+res.plot_predict(start='2016-07-01', end='2017-06-01')
+plt.show()
+```
+
+### Choosing theRight Model
+- In practise, we will ordinarily not be told the order of the model that we're trying to estimate.
+
+#### Identifying the Order of an AR Model
+- There are two techniques that can help determine the order of the AR model: The **rtial Autocorrelation Function, and the Information Criteria**.
+
+#### Partial Autocorrelation Function (PACF)
+- Partial Autocorrelation Function measures the incremental benefit of adding another lag. Imagine running several regressions, where the regress returns on more and more lagged values.
+
+```python
+Rt = phi0,1 + phi1,1 Rt-1 + noise
+Rt = phi0,2 + phi1,2 Rt-1 + phi2,2 Rt-2 + noise
+Rt = phi0,3 + phi1,3 Rt-1 + phi2,3 Rt-2 + phi3,3 Rt-3 + noise
+Rt = phi0,4 + phi1,4 Rt-1 + phi2,4 Rt-2 + phi3,4 Rt-3 + phi4,4 Rt-4 + noise
+```
+
+- The coefficeints represent the values of the partial autocorrelation function for different lags.
+- For e.g, in the bottom row, the coefficient phi4,4, is the lag-4 value of the Partial Autocorrelation function, and it represents how significant adding 4th lag is when we already have 3 lags.
+
+#### Plot PACF
+- `plot_pacf` is the statsmodels function for plotting the partial autocorrelation function.
+
+```python
+from statsmodels.graphics.tsaplots import plot_pacf
+
+plot_pacf(x, lags=20, alpha=0.05) # input x is a series of array
+```
+
+- Argument lags indicates how many lags of the partial autocorrelation function will be plotted. Alpha argument sets the width of the confidence interval.
+
+#### Information Criteria
+- The more parameters in a model, the better the model will fit the data.But this can lead to overfitting of the data.
+- **The Information criteria adjusts the goodness-of-fit of a model by imposing a penalty based on the number of parameters used.**
+- Two popular adjusted goodness-of-fit measures are called the **Akaike Information Criterion** and the **Bayesian Information Criterion**. **(AIC & BIC)**
+
+#### Getting Information Criteria from statsmodels
+- To get the **AIC and BIC statistics**, we follow the same procedure to fit the data to a model.
+- In practise, the way to use the information criteria is to fit several models, each with a different number of parameters, and choose the one with lowest Bayesian information criterion.
+
+```python
+from statsmodels.tsa.arima_model import ARMA
+mod = ARMA(simulated_data, order=(1,0))
+result = mod.fit()
+
+result.summary()
+
+result.params
+
+# to get AIC BIC
+result.aic
+result.bic
+```
+
+#### Information Criteria
+- Suppose we are given a time series of data, and unknown to us, it was simulated from an AR(3) model.
+
+1. Fit a simulated AR(3) to different AR(p) models
+2. Plot BIC when we fit the data to an AR(1) up to an AR(8) model.
+3. Choose p with lowest BIC.
+
+
+
+
+
+
+
+
 
 
 
