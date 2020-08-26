@@ -426,8 +426,29 @@ result.bic
 2. Plot BIC when we fit the data to an AR(1) up to an AR(8) model.
 3. Choose p with lowest BIC.
 
+### Moving Average Model
+- In a moving average, or MA model, today's value equals a mean plus noise, plus a fraction theta of yesterday's noise.
 
+#### Mathematical Description of MA(1) Model
+- `Rt = mean + eta(t) + theta eta(t-1)`
+- Since there is only one lagged error on the RHS, this is called an MA model of order 1, or simply an MA(1) model.
+- If the MA parameter, theta is zero, then the process is white noise. MA models are stationary for all values of theta.
 
+#### Interpretation of MA(1) parameter
+- `Rt = mean + eta(t) + theta eta(t-1)`
+- Suppose Rt is a time series of stock returns. If theta is negative, then a positive shock last period, represented by epsilon t-1,would have caused last period's return to be positive, but this period's return is more likely to be negative.
+- A shock two periods ago would have no effect on today's return - only the shock now and last period.
+- Negative theta : One-period Mean Reversion Positive theta: One-period Momentum
+- Also the lag-1 autocorrelation turns out not to be theta, but theta over 1 plus theta squared. (One period autocorrelation : theta/(1 + theta^2), not theta
+
+#### Comparison of MA(1) Autocorrelation Functions
+- In each case there is a zero autocorrelation for an MA(1) beyond lag-1.
+- When theta is positive the lag-1 autocorrelation is positive and when theta is negative, the lag-1 autocorrelation is negative.
+
+#### Higher order MA models
+- MA(1) : `Rt = mean + eta(t) - theta1 eta(t-1)`
+- MA(2) : `Rt = mean + eta(t) - theta1 eta(t-1) - theta2 eta(t-2)`
+- MA(3) : `Rt = mean + eta(t) - theta1 eta(t-1) - theta2 eta(t-2) - theta3 eta(t-3)`
 
 
 
