@@ -450,11 +450,47 @@ result.bic
 - MA(2) : `Rt = mean + eta(t) - theta1 eta(t-1) - theta2 eta(t-2)`
 - MA(3) : `Rt = mean + eta(t) - theta1 eta(t-1) - theta2 eta(t-2) - theta3 eta(t-3)`
 
+#### Simulating an MA Process
 
+```python
+from statsmodels.tsa.arima_process import ArmaProcess
+ar = np.array([1])
+ma = np.array([1, 0.5])
+AR_object = ArmaProcess(ar, ma)
+simulated_data = AR_object.generate_sample(nsample=1000)
+plt.plot(simulated_data)
+```
 
+- For an MA(1), the AR order is just an array containing 1. The MA order is an array containing 1 and the MA(1) parameter theta.
+- Unlike with the AR simulation, we don't need to reverse the sign of theta.
 
+### Estimating and Forecasting an MA Model
+- Same as estimating an AR model (except order=(0,1)). The order is (0,1) for an MA(1), not (1,0) for an AR(1).
 
+```python
+from statsmodels.tsa.arima_model import ARMA
+mod = ARMA(simulated_data, order=(0, 1))
+result = mod.fit()
+```
+#### Forecasting an MA Model
+- The procedure for forecasting an MA model is the same as that for an AR model, we create instance of an class using ARMA and we use the fit method to estimate the parameters.
+- To estimate an MA model, set the order to (0, 1) then use the method `plot_predict()` to do forecasting as we did forecasting an AR model.
+- One thing to note with an MA(1) model, unlike an AR model, all forecasts beyond the one-step ahead forecast will be the same.
 
+```python
+from statsmodels.tsa.arima_model import ARMA
+mod = ARMA(simulated_data, order=(0,1))
+res = mod.fit()
+res.plot_predict(start="2016-07-01', end='2017-06-01')
+plt.show()
+```
+
+### ARMA models
+- An ARMA model is combination of an AR and MA model.
+- `Rt = mean + phi R(t-1) + eta(t) + theta eta(t-1)` : Formula for an ARMA(1,1) model, which has the familiar AR(1) and MA(1) components.
+
+#### Converting between ARMA, AR and MA models
+- ARMA models can be converted to pure AR or pure MA models.
 
 
 
