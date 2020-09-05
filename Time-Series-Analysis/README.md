@@ -492,12 +492,15 @@ plt.show()
 #### Converting between ARMA, AR and MA models
 - ARMA models can be converted to pure AR or pure MA models.
 
+### Cointegration Models
+- The idea behind cointegration is that even if the prices of two different assests both follow random walks, it is still possible that a linear combination of them is not a random walk.
+- If that's true, then even though P & Q are not forecastable because they're random walks, the linear combination is forecastable, and we say that P and Q are cointegrated.
 
+#### Analogy : Dog on a Leash
+- Pt = Owner, Qt = Dog. Both series look like a random walk. Difference, or distance between them, looks mean reverting. If dog falls too far behind, it gets pulled forward. If dog gets too far ahead, it gets pulled back.
 
-
-
-
-
+#### Example : Heating Oil and Natural Gas
+- Both Heating Oil prices and Natural Gas prices look like they're random walks. But when we look at the spread or difference between them, the series looks like it's mean reverting.
 
 
 
