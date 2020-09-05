@@ -501,14 +501,23 @@ plt.show()
 
 #### Example : Heating Oil and Natural Gas
 - Both Heating Oil prices and Natural Gas prices look like they're random walks. But when we look at the spread or difference between them, the series looks like it's mean reverting.
+- For e.g, when heating oil spiked down relative to natural gas in 2001, the spread reverted back.
 
+#### What type of series are Cointegrated?
+- With commodities, there may be economic forces that link the two prices. Consider heating oil and natural gas. Some power plants have the ability to use either one, depending on which has become cheaper. So when heating oil has dipped below natural gas, increased demand for heating oil will push it back up. 
+- Platinum and Palladium are substitutes in some types of catalytic converters used for emission control. Corn and wheat are substitures for animal food. Corn and Sugar are substitutes as sweetners, etc.
+- For stocks, a natural starting point for identifying cointegrated pairs are stocks in the same industry. However, competitors are not necessarily economic substitues. Think of apple and blackberry. It's not necessarily the case that when one of those company's stock price jumps up, the other catches up.
 
+#### Two steps to test for Cointegration
+- We can break down the process for testing whether two series are cointegrated into two steps.
+- First, we regress the level of one series on the level of the other series, to get the slope coefficient c.
+- Then, we run the Augmented Dickey-Fuller test, the test for a random walk on the linear combination of the two series. 
+- statsmodels has a function `coint` that combines both steps.
 
-
-
-
-
-
+```python
+from statsmodels.tsa.stattools import coint
+coint(P,Q)
+```
 
 
 
