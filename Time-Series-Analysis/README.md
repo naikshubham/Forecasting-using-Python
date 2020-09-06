@@ -519,7 +519,11 @@ from statsmodels.tsa.stattools import coint
 coint(P,Q)
 ```
 
-
+### Case study: Climate Change
+- Analyze some temperature data taken over 150 years. Test for Random walk using augmented dickey fuller test.
+- Then take first differences of the data to transform it into a stationary series and compute the Autocorrelation Function and the Partial Autocorrelation Function of the data.
+- Using that as a guide, we'll fit a few AR,MA and ARMA models to the data. Then we'll use the Information Criterion to choose the best model among the ones we looked at.
+- Finally, with the best model, we'll forecast temperatures over the next 30 years.
 
 
 
