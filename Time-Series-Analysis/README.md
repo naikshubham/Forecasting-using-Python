@@ -526,6 +526,53 @@ coint(P,Q)
 - Finally, with the best model, we'll forecast temperatures over the next 30 years.
 
 
+### Finding and Handling missing values
+- In the field of Data Science, it is common to encounter datasets with missing values. This is especially true in the case of time series data, where missing values can occur if a measurement fails to record the value at a specific timestamp. To count the number of missing values in a DataFrame called df that contains time series data.
+- In order to replace missing values in our time series data, we can use `df = df.fillna(method="ffill")` where the argument specifies the type of method we want to use. For example, specifying `bfill (i.e backfilling)` will ensure that missing values are replaced using the next valid observation, while `ffill (i.e. forward-filling)` ensures that missing values are replaced using the last valid observation.
+
+### Plot aggregates of the data
+
+#### Moving averages
+- A moving average also known as rolling mean, is commonly used technique in time series analysis.
+- It can be used to smooth out short-term fluctuations, remove outliers and highlight long-term trends or cycles.
+- Taking the rolling mean of the time series is equivalent to "smoothing" our time series data.
+- In pandas `.rolling()` method allows us to specify the number of data points to use when computing metrics.
+
+#### The moving average model
+- Here we specify the sliding window of 52 points and compute the mean of those 52 points as the window moves along the date axis.The number of points to use when computing moving averages depends on the application, and these parameter are usually set through trail and error or according to some seasonality.
+- For e.g, we can take the rolling mean of daily data and specify a window of 7 to obtain weekly moving averages.Why 52 was choosen? We are working with weekly data so window of 52 is specified (because there are 52 weeks in a year), inorder to compute the yearly rolling mean.
+
+```python
+co2_levels_mean = co2_levels.rolling(window=52).mean()
+```
+
+#### Computing aggregate values of our time series
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
