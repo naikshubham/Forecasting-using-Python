@@ -67,5 +67,69 @@ pd.DataFrame(data=data, index=index).info()
 </p>
 
 
+### Indexing & resampling time series
+#### Time series transformation
+- Parsing string dates and converting to datetime64
+- Selecting subperiods of our time series and setting or changing the frequency of the DateTimeIndex. We can change the frequency to a higher or lower value: upsampling involves increasing the time frequency, which requires generating new data.Downsampling means decreasing the time frequency, which requires aggregating data.
+
+#### Getting GOOG stock prices
+
+```python
+google = pd.read_csv('google.csv')
+google.info()
+```
+
+#### Converting string dates to datetime64
+- `pd.to_datetime()`
+- `.set_index()`
+- `inplace()` : Don't create copy
+- The resulting DateTimeIndex lets us treat the entire dataframe as time series data.
+
+```python
+google.data = pd.to_datetime(google.data)
+google.set_index('date', inplace=True)
+```
+
+#### Plotting time series
+
+```python
+google.price.plot(title='Google stock price')
+plt.tight_layout()
+plt.show()
+```
+
+#### Partial string indexing
+- We can use strings that represent the complete date, or relevant parts of a date.
+- If we just pass a string representing a year, pandas returns all dates within this year.
+- If we pass a slice that starts with one month and ends at another, we get all dates within that range.
+
+```python
+google['2015'].info() # pass string for part of date
+google['2015-3':'2016-2'].info() #slice includes last month
+google.loc['2016-6-1', 'price'] # use full date with .loc
+```
+
+- We can also use `.loc` with a complete date and a column label to select a specific stock price.
+
+#### .asfreq() : set frequency
+- We can set the freq info using `.asfreq`. As a result, the DateTimeIndex now contains many dates where stock wasn't bought or sold.
+- We can also convert the DateTimeIndex to business day freq. Pandas has a list of days commonly considered business days.
+
+```python
+google.asfreq('D').info() # set calendar day freq
+google = google.asfreq('B') # change to calendar day freq
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
