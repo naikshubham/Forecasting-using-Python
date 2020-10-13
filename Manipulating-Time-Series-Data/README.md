@@ -156,6 +156,90 @@ google['pct_change'] = google.price.pct_change().mul(100)
 google['return_3d'] = google.price.pct_change(periods=3).mul(100)
 ``` 
 
+### Compare time series growth rates
+#### Comparing stock performance
+- We often want to compare time series trends. However, because they start at different levels, it's not always easy to do so from a simple chart. A simple solution is to normalize all price series so that they start at the same value.
+- We acheive this by dividing each time series by its first value.As a result, the first value equals one, and each subsequent price now reflects the relative change to the initial price.
+- Multiply the normalized series by 100, and we get the relative change to the initial price in percentage points : a price change from 100 to 120 implies a 20 percentage point increase.
+
+#### Normalizing a single series
+- To select first price, select the column and use `.iloc` for integer based selection with the value 0. We could have used `.loc` with the label of the first date, but `iloc` is easier because we dont have to know the first avaialable date.
+- We can now divide the price series by its first price using `.div`, and multiply the result by 100.
+
+```python
+google = pd.read_csv('google.csv', parse_dates=['date'], index_col='date')
+
+first_price = google.price.iloc[0] # int-based selection
+first_price = google.loc['2010-01-04', 'price']  # using loc
+
+normalized = google.price.div(first_price).mul(100)
+normalized.plot(title='Google Normmalized Series')
+
+# compare multiple stocks
+prices = pd.read_csv('stock_prices.csv', parse_dates=['date'], index_col='date')
+normalized = prices.div(prices.iloc[0])
+
+# before plotting, add a benchmark to compare the performance of the stocks not only to each other, but also against the broader stock market
+index = pd.read_csv('benchmark.csv', parse_dates=['date'], index_col='date')
+
+# we can use the S&P 500, which reflects the performance of the 500 largest listed companies in the US.
+
+prices = pd.concat([prices, index], axis=1).dropna()
+
+# we can divide the four series by their respective first prices,multiply by 100, and easily see how each performed against the S&P500 and relative to each other
+normalized = prices.div(prices.iloc[0]).mul(100)
+normalized.plot()
+
+### Plotting performance difference
+diff = normalized[tickers].sub(normalized['SP500'], axis=0)
+diff.plot()
+```
+
+### Changing the time series frequency : resampling
+- We often need to convert two time series to a common frequency to analyze them together.
+- Frequency conversion affects the data. When we upsample by converting the data to a higher frequency, we create new rows and need to tell pandas how to fill or interpolate the missing values in these rows.
+- When we downsample, we reduce the number of rows, and need to tell pandas how to aggregate existing data.
+- Pandas provides `.asfreq()` , `.reindex()` , `.resample()` for resampling.
+
+#### Upsample : Quarterly data
+- Create a pandas series to upsample. When we choose quarterly frequency, pandas defaults to december for the end of the 4th quarter, which we could modify by using a different month with the quarter alias.
+- Upsample to monthly : Pandas adds new month-end dates to the DateTimeIndex between the existing dates. As a result, there are now several months with missing data between March and December.
+- Upsampling creates missing values.
+- Let's compare three ways that pandas offers to fill missing values when upsampling. We'll create a DataFrame that contains all alternatives to the baseline, our first column.
+- We can convert a Series to a DataFrame by applying the `to_frame()` method, passing a column name as parameter.
+
+```python
+dates = pd.date_range(start='2016', periods=4, freq='Q')
+data = range(1,5)
+quarterly = pd.Series(data=data, index=dates)
+
+monthly = quartely.asfreq('M') # to month end freq
+```
+
+#### Upsampling : fill methods
+- The first 2 options invovle choosing a fill method, either forward fill or backfill. The third option is to provide a fill value.
+- If we compare the results, we see that forward fill propagates any value into the future if the future contains misssing values. Backfill does the same for the past, and fill value just substitutes missing values.
+
+```python
+monthly['ffill'] = quarterly.asfreq('M', method='ffill')
+monthly['bfill'] = quarterly.asfreq('M', method='bfill')
+monthly['value'] = quarterly.asfreq('M', fill_value=0)
+```
+
+#### Add missing months : .reindex()
+- If we want a monthly DateTimeIndex that covers the full year, we can use `.reindex()`. Pandas aligns existing data with the new monthly values, and produces missing values elsewhere.
+- We can use the exact same fill options for reindex as we just did it for asfreq.
+
+```python
+dates = pd.date_range(start='2016', periods=12, freq='M')
+
+quarterly.reindex(dates)
+```
+
+
+
+
+
 
 
 
