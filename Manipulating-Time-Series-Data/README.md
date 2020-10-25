@@ -236,6 +236,61 @@ dates = pd.date_range(start='2016', periods=12, freq='M')
 quarterly.reindex(dates)
 ```
 
+### Upsampling & interpolation with .resample()
+- The resample method follows a logic similar to groupby: it groups data within a resampling period, and applies a method to this group. It takes the value that results from this method, and assigns a new date within the resampling period.
+- The new date is determined by a so-called offset, and for instance can be at the beginning or end of the period or a custom location.
+- We will use resample to  apply methods that either fill or interpolate missing date when up-sampling, or that aggregate when down-sampling.
+- When looking at resampling by month, we have focused on month-end frequency.In other words, after resampling new data will be assigned the last calendar day for each month.
+
+```python
+unrate = pd.read_csv('unrate.csv', parse_dates=['Date'], index_col='Date')
+unrate.info()
+unrate.head()
+# an inspected of the first rows shows that the data are reported for the first of each calendar month
+```
+
+#### Resampling logic
+- When up-sampling, there will be more resampling periods than data points. Each resampling period will have a given date offset, for instance month-end frequency. We then need to decide how to create data for the new resampling periods.
+- In contrast, when down sampling, there are more data points than resampling periods. Hence, we need to decide how to aggregate our data to obtain a single value for each date offset.
+
+#### Assign frequency with .resample()
+- We can use resample to set a frequency for the unemployment rate. Let's use month start frequency given the reporting dates.
+- When we apply the resample method, it returns a new object called Resampler object. Just apply another method, and this object will again return a DataFrame.
+- **.resample()** : returns data only when calling another method.
+- We can apply the asfreq method to just assign the data to their offset without modification. The `.equal()` method tells us that both approaches yeild the same result.
+
+```python
+unrate.asfreq('MS').info()
+
+unrate.resample('MS') # creates resampler object
+
+unrate.asfreq('MS').equals(unrate.resample("MS").asfreq())
+```
+
+#### Interpolate monthly real GDP growth
+- We can use resample to convert the series to month start frequency, and then forward fill logic to fill the gaps.
+
+```python
+gdp_1 = gdp.resample('MS').ffill().add_suffix('_ffill')
+```
+
+- Resample also lets us interpolate the missing values, that is, fill in the values that lie on a straight line between existing quartely growth rates.
+- **.interpolate()** : finds points on straight line between existing data.
+- A look at the first few rows shows how interpolate averages existing values.
+
+```python
+gdp_2 = gdp.resample('MS').interpolate().add_suffix('_inter')
+```
+
+#### Plot interpolated real GDP growth
+- A plot of the data for the last two years visualizes **how the new data points lie on the line between the existing points**, whereas forward filling creates a step-like pattern.
+
+
+
+
+
+
+
 
 
 
