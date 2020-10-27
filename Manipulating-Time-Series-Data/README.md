@@ -285,9 +285,40 @@ gdp_2 = gdp.resample('MS').interpolate().add_suffix('_inter')
 #### Plot interpolated real GDP growth
 - A plot of the data for the last two years visualizes **how the new data points lie on the line between the existing points**, whereas forward filling creates a step-like pattern.
 
+#### Downsampling and aggregation
+- Reduce the frequency of the time series. This includes, converting hourly data to daily data, or daily data to monthly data.
+- In this case, we need to decide how to summarize the existing data as 24 hours become a single day. The options are familiar aggregation metrics like the mean or median, or simply the last value, and our choice depends on the context.
 
+```python
+ozone = pd.read_csv('ozone.csv', parse_dates=['date'], index_col='date')
 
+# since the imported DateTimeIndex has no frequency, let's first assign calendar day frequency using .resample()
 
+ozone = ozone.resample('D').asfreq()
+ozone.info()
+```
+
+#### Creating monthly ozone data
+- To convert daily ozone data to monthly frequency, just apply the resample method with the new sampling period and offset.
+- Next, **apply the mean method to aggregate the daily data to a single monthly value**.We can see that the monthly average has been assigned to the last day of the calendar month. We can apply median in the exact same fashion.
+- Similar to the groupby method we can apply multiple aggregations at once. Just use the `.agg()` method and pass a list of aggregation functions like the mean and the standard deviation.
+
+```python
+ozone.resample('M').mean().head()
+
+ozone.resample('M').agg(['mean','std']).head()
+```
+
+#### Plotting resample ozone data
+- Matplotlib allows us to plot several times on the same object by referencing the axes object that contains the plot.
+- We see that the resampled data are much smoother since the monthly volatility has been averaged out.
+
+```python
+ozone = ozone.loc['2016':]
+ax = ozone.plot()
+monthly = ozone.resample('M').mean()
+monthly.add_suffix('_monthly').plot(ax=ax)
+```
 
 
 
