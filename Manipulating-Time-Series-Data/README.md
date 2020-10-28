@@ -320,6 +320,67 @@ monthly = ozone.resample('M').mean()
 monthly.add_suffix('_monthly').plot(ax=ax)
 ```
 
+#### Rolling window functions with pandas
+- Window functions are useful because they allow us to operate on sub periods of our time series. In particular, window functions calculate metrics for the data inside the window. Then, the result of this calculation forms a new time series, where each data point represents a summary of several data points of the original time series.
+- **Rolling windows** maintain the same size while they slide over the time series, so each new data point is the result of a given number of observations.
+- **Expanding windows** grow with the time series, so that the calculation that produces a new data point is the result of all previous data points.
+
+#### Calculating a rolling average (simple moving average)
+- When we choose integer based window size,pandas will only calculate the mean if the window has no missing values. We can change this default by setting the `min_periods` parameter to a value smaller than the window size of 30
+- We can also create windows based on a date offset.If we chose **30D** for instance, the window will contain the days when stocks were traded during the last 30 calendar days. While the window is fixed in terms of period length, the number of observations will vary.
+
+```python
+data = pd.read_csv('google.csv', parse_dates=['date'], index_col='date')
+
+# integer based window size
+# window=30 business days
+data.rolling(window=30).mean() 
+```
+
+#### 90 day rolling mean
+- Calculate a 90 calendar day rolling mean, and join it to the stock price. The join method allows us to concatenate a Series or DataFrame along axis 0, that is horizontally.
+- We see that the new time series is much smoother because every data point is now the average of the preceding 90 calendar days.
+
+```python
+r90 = data.rolling(window='90D').mean()
+google.join(r90.add_suffix('_mean_90')).plot()
+
+data['mean90'] = r90
+r360 = data['price'].rolling(window='360D').mean()
+data['mean360'] = r360
+data.plot()
+```
+
+#### Multiple rolling metrics
+- Similar to groupby we can also calculate multiple metrics at the same time,using **agg** method.
+- With a 90-day moving average and standard dev we can easily discern periods of heightened volatility.
+
+
+```python
+r = data.price.rolling('90D').agg(['mean', 'std'])
+r.plot(subplots=True)
+```
+
+- Display a 360 calendar day rolling median, or 50 percent quantile, alongside the 10 and 90 percent quantiles.
+
+```python
+rolling = data.google.rolling('360D')
+q10 = rolling.quantile(0.1).to_frame('q10')
+median = rolling.median().to_frame('median')
+q90 = rolling.quantile(0.9).to_frame('q90')
+pd.concat([q10, median, q90], axis=1).plot()
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 
