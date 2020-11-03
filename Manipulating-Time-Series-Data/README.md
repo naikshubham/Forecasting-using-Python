@@ -371,6 +371,71 @@ q90 = rolling.quantile(0.9).to_frame('q90')
 pd.concat([q10, median, q90], axis=1).plot()
 ```
 
+### Expanding window functions with pandas
+
+#### Expanding windows in pandas
+- We will now calculate metrics for groups that get larger to exclude all data up to the current date. Calculate metrics for periods up to current date.
+- Each data point of the resulting time series reflects all historical values up to that point.
+- Expanding windows are useful to calculate for instance a cumulative rate of return, or a running maximum or minimum.
+- Two options with pandas. `.expanding()` just like `.rolling()`, or in few cases shorthand methods for the `.cumsum()`, `.cumprod()`, `.cummin() / max()`.
+- The output is a list where each number is the sum of all preceding values.
+
+```python
+df = pd.DataFrame({'data':range(5)})
+df['expanding sum'] = df.data.expanding().sum()
+df['cumulative sum'] = df.data.cumsum()
+```
+
+#### Calculate a running return
+- Single period return : current price over last price minus 1. Pandas makes these calculations easy.
+- For the period return : `.pct_change()`
+- For basic math: `.add() .sub() .mul() .div()`
+- For cumulative product : `.cumprod()`
+
+
+```python
+data = pd.read_csv('sp500.csv', parse_dates=['date'], index_col='date')
+pr = data.SP500.pct_change()
+pr_plus_one = pr.add(1)
+cumulative_return = pr_plus_one.cumprod().sub(1)
+cumulative_return.mul(100).plot()
+```
+
+#### Getting the running min & max
+- We can easily calculate the running min and max of the time series. Just apply the expanding method and the respective aggregation method.
+
+```python
+data['running_min'] = data.SP500.expanding().min()
+data['running_max'] = data.SP500.expanding().max()
+data.plot()
+```
+
+#### Rolling annual rate of return
+- Calculate the rolling annual rate of return, that is, the cumulative return for all 360 calendar day periods over the ten year period covered by the data.
+
+```python
+def multi_period_return(period_returns):
+    return np.prod(period_returns + 1) - 1
+    
+pr = data.SP500.pct_change() # period return
+r = pr.rolling('360D').apply(multi_period_return)
+data['Rolling 1yr Return'] = r.mul(100)
+data.plot(subplots=True)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
