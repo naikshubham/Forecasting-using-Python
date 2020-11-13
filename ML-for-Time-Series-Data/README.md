@@ -240,6 +240,14 @@ bandwidths_all = []
 
 for spec in spectrograms:
   bandwidths = lr.feature.spectral_bandwidth(S=lr.db_to_amplitude(spec))
+  centroids = lr.feature.spectral_centroids(S=lr.db_to_amplitude(spec))
+  # calculate the mean spectral bandwidth
+  bandwidths_all.append(np.mean(bandwidths))
+  # calculate the mean spectral centroid
+  centroids_all.append(np.mean(centroids))
+  
+# create our X matrix
+X = np.column_stack([means, stds, maxs, tempo_mean, tempo_max, tempo_std, bandwidths_all, centroids_all])
 ```
 
 
