@@ -174,6 +174,73 @@ import librosa as lr
 audio_tempo = lr.beat.tempo(audio, sr=sfreq, hop_length=2**6, aggregate=None)
 ```
 
+### The spectrogram - spectral changes to sound over time
+
+#### Fourier transforms
+- Spectograms are common in timeseries analysis. Key part of the spectrograms- the fourier transform.
+- This approach summarizes a time series as a collection of fast-and-slow moving waves.
+- The Fourier Transform or FFT is a way to tell us how these waves can be combined in different amounts to create our time series. It describes for a window of time, the presence of fast-and-slow-oscillations that are present in a timeseries.
+- **The slower oscillations are on the left (closer to 0) and the faster oscillations are on the right**. This is a more rich representation of the audio signal.
+
+### Spectrograms : combination of windows Fourier transforms
+- A spectrogram is a collection of windowed Fourier transforms over time.We can calculate multiple fourier transforms in a sliding window to see how it changes over time.
+- For each timepoint, we take a window of time around it, calculate a fourier transform for the window, then slide to the next window(similar to calculating the rolling mean).
+
+1. Choose a window size and shape
+2. At a timepoint, calculate the FFT for that window
+3. Slide the window over by one
+4. Aggregate the results
+5. Its called a Short-Time Fourier Transform(STFT)
+
+- To calculate the spectogram, we squar each value of the STFT.Note how the spectral content of the sound changes over time.
+- Because it is speech, we can see interesting patterns that corresponds to spoken words(e.g vowels or consonants)
+
+#### Calculating the STFT
+- Calculate the STFT of the audio file, then convert the output to decibels to visualize it more cleanly with specshow (which results in the visualized spectograms). 
+
+```python
+from librosa.core import stft, amplitude_to_db
+from librosa.display import specshow
+
+# calculate our STFT
+HOP_LENGTH = 2**4
+SIZE_WINDOW = 2**7
+audio_spec = stft(audio, hop_length=HOP_LENGTH, n_fft=SIZE_WINDOW)
+
+# Convert into decibels for visualization
+spec_db = amplitude_to_db(audio_spec) # ensures all values are postive real nos
+
+# visualize
+specshow(spec_db, sr=sfreq, x_axis='time', y_axis='hz', hop_length=HOP_LENGTH)
+```
+
+#### Spectral feature engineering
+- Each timeseries has a unique spectral pattern to it. This means we can use patterns in the spectrogram to distinguish classes from one another.
+- For example, we can calculate the spectral centroid and bandwidth over time. These describe where most of the spectral energy lies over time.
+
+#### Calculate spectral features
+
+```python
+# calculate the spectral centroid and bandwidth for the spectrogram
+bandwidths = lr.feature.spectral_bandwidth(S=spec)[0]
+centroids = lr.feature.spectral_centroid(S=spec)[0]
+
+# display these features on top of the spectrogram
+ax = specshow(spec, x_axis='time', y_axis='hz' hop_length=HOP_LENGTH)
+ax.plot(times_spec, centroids)
+ax.fill_between(times_spec, centroids - bandwidths / 2, centroids + bandwidths / 2, alpha=0.5)
+```
+
+#### Combining spectral and temporal features in a classifier
+- As a final step, we can combine each of the features into a single input matrix for our classifier.
+
+```python
+centroids_all = []
+bandwidths_all = []
+
+for spec in spectrograms:
+  bandwidths = lr.feature.spectral_bandwidth(S=lr.db_to_amplitude(spec))
+```
 
 
 
