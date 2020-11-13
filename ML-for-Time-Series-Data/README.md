@@ -111,6 +111,70 @@ percent_score = sum(predictions == labels_test) / len(labels_test)
 percent_score = accuracy_score(labels_test, predictions)
 ```
 
+### Improving features for classification
+- Some features that are more unique to timeseries data. Calculate the **envelope** of each heartbeat sound.
+- The envelope throws away information about the fine-grained changes in the signal, focusing on the general shape of the audio waveform. To do this we'll need to calculate the audio's amplitude, then smooth it over time.
+
+#### Smoothing over time
+- We can remove noise in timeseries data by smoothing it with a rolling window. Instead of averaging over all time, we can do a local average.
+- This is called smooting timeseries. This means defining a window around each timepoint, calculating the mean of this window, and then repeating this for each timepoint.
+
+```python
+# Calculating a rolling window statistic
+window_size=50 # larger the window smoother the result
+
+windowed = audio.rolling(window=window_size)
+audio_smooth = windowed.mean()
+```
+
+#### Calculating the auditory envelope
+- First rectify audio, then smooth it. Calculate the "absolute value" of each timepoint. This is also called "rectification", because we ensure that all time points are positive.
+- Next, we calculate a rolling mean to smooth the signal.
+
+```python
+audio_rectified = audio.apply(np.abs)
+audio_envelope = audio_rectified.rolling(50).mean()
+```
+
+##### Feature engineering the envelope
+- Once we've calculated the acoustic envelope, we can create better features for our classifier. Here we calculate several common statistics of each auditory envelope, and calculate them in a way that scikit-learn can use.
+- Even though we're calculating the same statistics(avg, std-dev and max), they are on different features, and so have different information about the stimulus.
+
+```python
+# calculate several features of the envelope, one per sound
+envelope_mean = np.mean(audio_envelope, axis=0)
+envelope_std = np.std(audio_envelope, axis=0)
+envelope_max = np.max(audio_envelope, axis=0)
+
+# create training data for a classifier
+X = np.column_stack([envelope_mean, envelope_std, envelope_max])
+y = labels.reshape([-1, 1])
+```
+
+##### Using cross_val_score
+
+```python
+from sklearn.model_selection import cross_val_score
+
+model = LinearSVC()
+scores = cross_val_score(model, X, y, cv=3)
+print(scores)
+```
+
+#### Auditory features : The Tempogram
+- There are several more advanced features that can be calculated with timeseries data. Each attempts to detect particular patterns over time, and summarize them statistically.
+- For example, a tempogram tells us the tempo of the sound at each moment.
+
+#### Computing the tempogram
+- It tells us the moment by moment tempo of the sound. We can then use this to calculate features for our classifier.
+
+```python
+# calculate the tempo of 1-d sound array
+import librosa as lr
+audio_tempo = lr.beat.tempo(audio, sr=sfreq, hop_length=2**6, aggregate=None)
+```
+
+
 
 
 
