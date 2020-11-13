@@ -53,6 +53,70 @@ time = np.linspace(0, final_time, sfreq)
 df['date'] = pd.to_datetime(df['date'])
 ```
 
+### Classifying a time series
+
+#### Classification and feature engineering
+- Always visualize raw data before fitting models. There is lot of complexity in any machine learning step, and visualizing raw data is important to make sure we know where to begin.
+- To plot raw audio, we need 2 things: the raw audio waveform, usually in a 1-d or 2d array. We also need a time point of each sample
+
+```python
+ixs = np.arange(audio.shape[-1])
+time = ixs / sfreq
+fig, ax = plt.subplots()
+ax.plot(time, audio)
+```
+
+#### What features to use
+- Using raw data as input to a classifier is usually too noisy to be useful. An easy first step is to calculate summary statistics of our data, which removes the "time" dimension and gives us a more traditional classification dataset.
+- For each time series, we calculate several summary statistics. These then can be used as features for a model. This way we can expand a single feature (raw audio amplitude) to several features (here, the min, max, and average of each sample).
+
+#### Calculating multiple features
+- Calculate multiple features for several timeseries. By using the **axis=-1** , we collapse across the last dimension, which is time. The result is an array of numbers, one per timeseries.
+- We collapsed a 2-d array into a 1-d array for each feature of interest. We can then combine these as inputs to a model. In the case of classification, we also need a label for each timeseries that allows us to build a classifier.
+
+```python
+means = np.mean(audio, axis=-1)
+maxs = np.max(audio, axis=-1)
+stds = np.std(audio, axis=-1)
+
+print(means.shape)
+```
+
+#### Preparing features for scikit learn
+- For scikit learn ensure that data has correct shape, which is samples by features.Here we can use the column_stack function, which lets us stack 1-d arrays by turning them into the columns of a 2-d array.
+- In addition, the labels array is 1-d, so we need to reshape it so that it is 2-d.
+
+```python
+from sklearn.svm import LinearSVC
+
+# reshape to 2-d to work with scikit-learn
+X = np.column_stack([means, maxs, stds])
+y = labels.reshape([-1, 1])
+model = LinearSVC()
+model.fit(X, y)
+```
+
+#### Scoring scikit-learn model
+
+```python
+from sklearn.metrics import accuracy_score
+
+# different input data
+predictions = model.predict(X_test)
+
+# score our model with % correct manually
+percent_score = sum(predictions == labels_test) / len(labels_test)
+
+# using a sklearn scorer
+percent_score = accuracy_score(labels_test, predictions)
+```
+
+
+
+
+
+
+
 
 
 
