@@ -93,7 +93,7 @@ bt_data = bt.get('goog, amzn, tsla', start='2020-6-1', end='2020-12-1')
 bt_strategy = bt.Strategy('Trade_Weekly', 
                            [bt.algos.RunWeekly(), #Run weekly
                             bt.algos.SelectAll(), #use all data
-                            bt.algos.WeightEqually(), # Maintain equal weights
+                            bt.algos.WeighEqually(), # Maintain equal weights
                             bt.algos.Rebalance()])    # Rebalance
 ```
 
@@ -119,12 +119,116 @@ bt_res.plot(title='Backtest result')
 bt_res.get_transcations()
 ```
 
+### Technical Indicators
 
+#### Trend Indicator MA
+- A technical indicator is a calculation based on historical market data such as price, volumes etc. They are essential to technical analysis, which assumes that the market is efficient and prices have incorporated all public informtion such as financial news or public policies.
+- Traders use technical indicators to gain insight into past price patterns and to anticipate possible future price movements.
 
+#### Types of indicators
+- **Trend indicators** : such as **Moving Average, Average Directional Movement Index** , measure the direction or strength of a trend.
+- **Momentum indicators** : such as **Relative Strength Index (RSI)** , measure the velocity of price movement, that is the rate of change in an upward or downward direction. 
+- **Volatilty indicators** : such as **Bollinger Bands** , measure the magnitude of price deviations.
                         
+## The TA-Lib package 
 
+### TA-Lib : Technical Analysis Library
+- We can use the TA Lib package to implement technical indicators in python.
+- TA Lib includes over 150 indicators and is very popular among technical traders.
 
+#### Moving average indicators
+- Simple moving average(SMA) and Exponential Moving average (EMA). They are called moving averages because every average value is calculated using data points of the most recent n periods, and hence moves along with the price.
+- Calculating the averages creates a smoothing effect which helps to give a clearer indication of which direction the price is moving - upward, downward or sideways.
+- Moving averages calculated based on a longer lookback period have more smooting effects than a shorter one.
 
+#### Simple Moving Average (SMA)
+- SMA is the arithmetic mean of the past n prices. N is the choosen number of periods for calculating the mean.
+- With `talib` , we can simply call `talib.SMA` and pass the DataFrame column.
+
+```python
+import talib
+
+# calculate two SMAs
+
+stock_data['SMA_short'] = talib.SMA(stock_data['Close'], timeperiod=10)
+stock_data['SMA_long'] = talib.SMA(stock_data['Close'], timeperiod=50)
+```
+
+#### Plotting the SMA
+
+```python
+import matplotlib.pyplot as plt
+
+# plot SMA with the price
+plt.plot(stock_data['SMA_short'], label='SMA_short')
+plt.plot(stock_data['SMA_long'], label='SMA_long')
+plt.plot(stock_data['Close'], label='Close')
+
+# customize and show the plot
+plt.legend()
+plt.title('SMAs')
+plt.show()
+```
+
+#### Exponential Moving Averge (EMA)
+- EMA is the exponential moving average of the last n prices, where the weight decreases exponentially with each previous price.
+
+```
+EMAn = Pn * multiplier + previousEMA * (1 - multiplier)
+multiplier = 2/(n+1)
+```
+
+```python
+# caclculate two EMAs
+
+stock_data['EMA_short'] = talib.EMA(stock_data['Close'], timeperiod=10)
+stock_data['EMA_long'] = talib.EMA(stock_data['Close'], timeperiod=50)
+```
+
+#### SMA vs EMA
+- The main difference between SMAs and EMAs is that EMAs give higher weight to the more recent data, while SMAs assign equal weight to all data points.
+
+### Strength indicator: Average Directional Movement Index or ADX
+- Its a Popular trend strength indicator. Measures the stength of a trend.
+- ADX can indicate **whether an asset price is trending or merely moving sideways**.
+- However, it does not tell the direction of a trend, that is bullish(rising prices) or bearish(falling prices)
+- ADX oscillates between 0 and 100. In general,an ADX less than 25 indicates the market is going sideways and has no clear trend **(ADX <= 25: no trend)** 
+- An ADX above 25 indicates the market is trending, and an ADX above 50 suggests a strong trending market.
+
+#### How ADX is calculated?
+- ADX is obtained using lengthly and complicated calculations. Simply put, ADX is derived from two other indicators: +DI and -DI.
+- **+DI (Plus Directional Index)** : quantifies the presence of an uptrend 
+- **-DI (minus directional index)** :  quantifies the presence of a downtrend.
+- **ADX is the smoothed averages of the differnce between +DI and -DI**. The calculation input for ADX includes the high, low and close prices of each period.
+
+#### Implementing ADX in Python
+- Originally Welles Wilder used a 14-period lookback window for ADX calculations, which became the industry standard.
+- The longer the lookback timeperiod window, the less sensitive the ADX is to price fluctuations. In other words, a 14-day ADX is more sensitive to daily price changes than a 21-day ADX.
+- ADX starts to rise when the price is steadily trending up. The ADX starts to decline when the uptrend in price is stalling and price is moving sideways.
+
+```python
+# calculate ADX
+stock_data['ADX'] = talib.ADX(stock_data['High'], stock_data['Low'], stock_data['Close'], timeperiod=14)
+```
+
+#### Plotting ADX
+- Usually an ADX plot is placed horizontally under a price plot, so we can observe the price and indicator changes together along the same timeline.
+
+```python
+import matplotlib.pyplot as plt
+
+# create subplots
+fig, (ax1, ax2) = plt.subplots(2)
+
+# plot the ADX with the price
+ax1.set_ylabel('Price')
+ax1.plot(stock_data['Close'])
+ax2.set_ylabel('ADX')
+ax2.plot(stock_data['ADX'])
+
+ax1.set_title('Price and ADX'])
+plt.show()
+```
 
 
 
