@@ -230,6 +230,70 @@ ax1.set_title('Price and ADX'])
 plt.show()
 ```
 
+### Momentum indicator : RSI
+- Momentum indicator : **Relative Strength Index or RSI**. RSI has been the most popular indicator used to measure momentum, which is the speed of rising or falling in prices. The RSI oscillates between 0 and 100.
+- Traditionally an **RSI over 70 indicates an overbought market condition** , which means the **asset is overvalued and the price may reverse**.
+- An **RSI below 30** suggests an **oversold market condition** , which means the **asset is undervalued** and the price may rally.
+
+#### RSI calculation
+- RS or Relative Strength, is the average of the upward price changes over a chosen n periods, divided by the average of downward price changes over those n periods. `RSI = 100 - 100/(1 + RS)
+- The formula is constructed in such a way that an RSI is bounded between 0 and 100.
+
+#### Implementing RSI in Python
+- Similar to ADX, Welles Wilder used a 14-period lookback window for RSI calculations, which became the industry standard.
+- Note the longer the lookback window, the less sensitive the RSI is to the price fluctuations. Traders may want to change the default time period to suit their specific trading time horizons or as a variable input for testing different trading strategies.
+- When the RSI is falling near 30, the price bottoms out and gradually recovers, and when the RSI value is approaching 70, the price reaches new highs and is more likely to pull back. 
+
+```python
+# calculate RSI
+stock_data['RSI'] = talib.RSI(stock_data['Close'], timeperiod=14)
+```
+
+### Volatility indicator: Bollinger Bands
+- Developed by John Bollinger, a famous technical trader.
+- Bollinger bands are designed to gauge price volatility, that is price deviations from the mean.
+- **Bollinger Bands are composed of three lines** : 
+- **a middle band** which is an **n-period simple moving average line**, where n=20 by default
+- **upper and lower band that are drawn k standard deviations above and below the middle band**, where k equals 2 by default.
+- Traders may choose the n and k to suit the trading time horizons and strategy needs. For example, a trader may choose 10-period moving average and 1.5 standard deviations for a shorter term strategy, or a 50-period moving average and 2.5 standard deviation for a longer-term strategy.
+
+#### Bolinger Bands implications
+- Since the upper and lower bands are calculated based on standard deviations from the mean price, they adjust to volatility swings in the underlying price. 
+- **The wider the Bollinger Bands, the more volatile the asset prices**.
+- In addition, Bollinger Bands intend to answer the question: **is the price too high or too low on a relative basis?**
+- **Statistically speaking, if the upper and the lower bands are based on 1 std-dev, they contain about 68% of the recent price moves**. Similarly, if the bands are based on **2 standard devs, they contain about 95% of recent price moves**
+- In other words, the price only moves out of the upper or lower bands in 5% of the cases. Hence we can say price is relatively extensive when it is close to the upper band, and relatively cheap when it is close to the lower band.
+
+#### Implementing Bollinger Bands in Python
+- `nbdevup` and `nbdevdb` specifies the number of std -devs away from the middle band for the upper and lower band respectively, which is 2 by default.
+
+```python
+# define the bollinger bands
+upper, mid, lower = talib.BBANDS(stock_data['Close'],
+                                 nbdevup=2,
+                                 bndevdn=2,
+                                 timeperiod=20)
+```
+
+#### Plotting Bollinger Bands
+- The Bollinger bands becomes wider when the price has big upward or downward swings. When the green price data gets closer to the red upper or red lower band, it tends to reverse temporairly before continuing the original upward or downward movement.
+
+```python
+import matplotlib.pyplot as plt
+
+# plot the bollinger bands
+plt.plot(stock_data['Close'], label='Price')
+plt.plot(upper, label='Upper band')
+plt.plot(mid, label='Middle  band')
+plt.plot(lower, label='Lower band')
+
+# Customize and show the plot
+plt.title('Bollinger Bands')
+plt.legend()
+plt.show()
+```
+
+
 
 
 
