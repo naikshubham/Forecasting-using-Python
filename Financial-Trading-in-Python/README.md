@@ -293,6 +293,78 @@ plt.legend()
 plt.show()
 ```
 
+### Trading Strategies
+- Construct signals and use them to build trading strategies. Two main styles of trading strategies : trend following and mean reversion.Build and backtest more sophisticated trading strategies.
+
+#### What are trading signals
+- Trading signals are triggers to long(buy) or short(sell) financial assets based on predetermined criteria. They can be constructed using one technical indicator, multiple technical indicators or a combination of market data and indicators.
+- Trading signals are commonly used in algorithmic trading, where trading strategies make decisions based on quantitative rules, and remove human discretion.
+
+#### A signal example
+- Signal : It is constructed by comparing the price with its n-period simple moving average or SMA. A long signal is triggered to buy the asset when its price rises above the SMA, and exit the long trade when its price drops the SMA.
+
+#### How to implement signals in bt
+- There is a 4 step process of defining and backtesting trading strategies.
+- 1. Get the data and calculate indicators
+- 2. Define the signal-based strategy
+- 3. Create and run a backtest
+- 4. Review the backtest result
+
+
+- There are two main ways to implement signals in bt strategies. One way is to use algos `bt.algos.SelectWhere()`  to filter price levels for constructing the signal.
+- Another way is to use algos WeighTarget `bt.algos.WeighTarget()`
+
+#### Construct the signal
+- Let's build a signal based strategy with bt step by step using the price and SMA based signal.
+- First we need to obtain the price data and calculate the moving average indicator. Here we use `bt.get` to download the stock price data directly online.
+- To calculate the SMA, we can apply `.rolling(20).mean()` to the price data. Alternatively we can use the `talib` library's SMA function.
+
+```python
+# get price data by the stock ticker
+price_data = bt.get('aapl', start='2019-11-1', end='2020-12-1')
+
+# calculate SMA
+sma = price_data.rolling(20).mean()
+
+# or
+import talib
+sma = talib.SMA(price_data['Close'], timeperiod=20)
+```
+
+#### Define a signal-based strategy
+- This is handled by algos SelectWhere. It takes the argument price large than SMA, which essentially is a Boolean DataFrame containing selection logic.
+- If the condition is true, that is the price rises above the SMA, a long signal is triggered to enter long positions of the asset.
+- For simplifications to the strategy we assume: First we will use the strategy for trading one asset, or one stock at a time. When we are trading multiple stocks or assets, their price correlations are important to consider for proper position sizing and asset allocation.
+- Another simplication we make is to assume there is no slippage or commission in the trade execution. **`Slippage` is the difference between the expected price of a trade and the price at which the trade is executed, and often occurs when there is a supply and demand imbalance**.
+- Commissions are fees charged by brokers when executing a trade. These are practical considerations in real trading, here we are focusing on basics.
+
+```python
+# Define the signal-based strategy
+
+bt_strategy = bt.Strategy('AboveEMA',
+                          [bt.algos.SelectWhere(price_data > sma),
+                          bt.algos.WeighEqually(),
+                          bt.algos.Rebalance()])
+```
+
+#### Backtest the signal based strategy
+- The line chart shows how much the beginning capital balance increases over time from a baseline of 100. Note that flat line areas indicate **periods when we don't have any positions**, so the trading account balance does not change.
+- Overall, the strategy is profitable based on the backtest performed on the historical data.
+
+```python
+# create the backtest and run it
+bt_backtest = bt.Backtest(bt_strategy, price_data)
+bt_result = bt.run(bt_backtest)
+
+# plot the backtest result
+bt_result.plot(title='Backtest result')
+```
+
+
+                          
+
+
+
 
 
 
