@@ -360,8 +360,76 @@ bt_result = bt.run(bt_backtest)
 bt_result.plot(title='Backtest result')
 ```
 
+#### Trend-following strategies
+- The two most popular types of trading strategies are trend following and mean reversion.
+- Trend following also known as a momentum strategy, bets that the price trend will continue in the same direction. When the price rises above its moving average, enter a long position to bet the price will continue to rise.
+- Traders commonly use `trend indicators` such as moving averages, ADX etc to construct trading signals for `trend following strategies`. 
+- `Mean reversion strategies`, conversely, bet that when the market reaches an **overbought or oversold condition, the price tends to reverse back towards the mean**.
+- Traders commonly use indicators such as **RSI, Bollinger Bands etc, to construct trading signals for mean-reversion strategies**.
+- Markets are constantly **moving in and out of phases of trending and mean reversion**. Therefore it's beneficial to develop strategies for both phases.
 
-                          
+#### MA crossover strategy
+- MA crossover strategy, which involves two moving average indicators, one longer and one shorter. Consider EMA for example
+- When the short-term EMA crosses the long-term EMA, it is a long signal, as it suggests the price is picking up a momentum.
+- When the short-term EMA crosses below the long-term EMA, it's a short signal, as it suggests that the price is losing momentum.
+
+#### Calculate the indicators
+- We set the signal value to 0 for the initial n periods that do not have enough data points for the EMA. Then we define a signal.
+- When the short-term EMA value is larger than the long-term EMA value, the signal is one indicating a long position, when the short term EMA is smaller than the long-term EMA, the signal is -1 indicating a short position.
+- Note that shorting a stock essentially means betting the price will go down, and entails selling borrowed shares, and later buying them back at market price.
+
+```python
+import talib
+
+# calculate the indicators
+EMA_short = talib.EMA(price_data['Close'], timeperiod=10).to_frame()
+EMA_long = talib.EMA(price_data['Close'], timeperiod=40).to_frame()
+
+# construct the signal
+# create the signal dataframe
+
+signal = EMA_long.copy()
+signal[EMA_long.isnull()] = 0
+
+# construct the signal
+signal[EMA_short > EMA_long] = 1
+signal[EMA_short < EMA_long] = -1
+```
+
+#### Plot the signal
+- We can plot the signal with the price and EMA indicators together.
+- Use `.columns` attribute of the DataFrame to rename the data columns and create a plot
+- Since the signal has a different scale from the price and EMA data, define `secondary_y` to the signal column to plot it on secondary y axis on the right.
+- The chart gives a clear indication of where to take long or short positions.
+
+```python
+# plot the signal, prices and MAs
+
+combined_df = bt.merge(signal, price_data, EMA_short, EMA_long)
+combined_df.columns = ['Signal', 'Price', 'EMA_short', 'EMA_long']
+combined_df.plot(secondary_y=['Signal'])
+```
+
+#### Define the strategy with the signal
+- The signal value 1, -1, 0 will dictate which period we will have long positions, short positions, or no positions.
+
+```python
+# define strategy
+
+bt_strategy = bt.Strategy('EMA_crossover', [bt.algos.WeighTarget(signal),
+                        bt.algos.Rebalance()])
+```
+
+#### Backtest the signal based strategy
+
+```python
+# create the backtest and run it
+bt_backtest = bt.Backtest(bt_strategy, price_data)
+bt_result = bt.run(bt_backtest)
+
+# plot the backtest result
+bt_result.plot(title='Backtest result')
+```
 
 
 
