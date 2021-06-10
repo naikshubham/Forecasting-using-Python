@@ -431,6 +431,82 @@ bt_result = bt.run(bt_backtest)
 bt_result.plot(title='Backtest result')
 ```
 
+### Strategy optimization and benchmarking
+
+#### How to decide the values of input parameters?
+- When we construct the signal based on the price and SMA comparison, what is the SMA lookback period we should use? Can a 10,20 or 50 period SMA result in a more profitable strategy?
+- The solution is to conduct strategy optimization, which is the process of testing a range of input parameter values to find the ones that give better strategy performance based on historical data.
+
+#### Strategy optimization example
+- To find the SMA lookback period that can optimize the strategy performance,we want to run multiple backtests by varying the SMA timeperiod parameters on different runs.
+- Pass period as parameter to change the SMA lookback period. In addition, we can pass the stock ticker, start date and end date to run backtests on different stocks and on different historical periods.
+
+```python
+def signal_strategy(ticker, period, name, start='2018-4-1', end='2020-11-1'):
+    # get the data and calculate SMA
+    price_data = bt.get(ticker, start=start, end=end)
+    sma = price_data.rolling(period).mean()
+    # define the signal-based strategy
+    bt_strategy = bt.Strategy(name,
+                              [bt.algos.SelectWhere(price_data>sma),
+                              bt.algos.WeighEqually(),
+                              bt.algos.Rebalance()])
+    # return the backtest 
+    return bt.Backtest(bt_strategy, price_data)
+```
+
+- Call the function several times to pass different SMA lookback parameters
+- Each function will return a `bt.Backtest` . Call `bt.run` to run all the Backtests at once, and plot the results in one chart for easy comparison.
+
+```python
+ticker = 'aapl'
+sma20 = signal_strategy(ticker, period=20, name='SMA20')
+sma50 = signal_strategy(ticker, period=50, name='SMA50')
+sma100 = signal_strategy(ticker, period=100, name='SMA100')
+
+# run backtests and compare results
+bt_results = bt.run(sma20, sma50, sma100)
+bt_results.plot(title='Strategy optimization')
+```
+
+#### Benchmark
+- A benchmark is a standard or point of reference against which a strategy can be compared or assessed.
+- For example, a strategy that uses signals to actively trade stocks can use a passive buy and hold strategy as a benchmark. A benchmark can also be chosen based on the market segments and asset risk profiles.
+- For example, the S&P 500 index is often used as a benchmark for US equity performance, and US Treasuries are used for measuring bond risks and returns.
+
+#### Benchmarking example
+- Instead of using a signal-based strategy to actively trade a stock, we will passively hold the stock and use its performance as the benchmark.
+
+```python
+def buy_and_hold(ticker, name, start='2018-11-1', end='2020-12-1'):
+    # get the data
+    price_data = bt.get(ticker, start=start_date, end=end_date)
+    # define the benchmark strategy
+    bt_strategy = bt.Strategy(name,
+                            [bt.algos.RunOnce(),
+                            bt.algos.SelectAll(),
+                            bt.algos.WeighEqually(),
+                            bt.algos.Rebalance()])
+    # return the backtest
+    return bt.Backtest(bt_strategy, price_data)
+```
+
+- Define a separate function to define a benchmark. Use `bt.algos.RunOnce()` to implement a passive strategy, that is buy a stock at the beginning of the period and just hold until the end of the period.
+
+```
+benchmark = buy_and_hold(ticker, name='benchmark')
+# run all backtests and plot the results
+bt_results = bt.run(sma20, sma50, sma100, benchmark)
+bt_results.plot(title='Strategy benchmarking')
+```
+
+
+
+
+
+
+
+
 
 
 
