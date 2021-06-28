@@ -1,5 +1,15 @@
 ### Making Time-Series stationary
 
+##### Stationarity
+- Stationary means the distribution of the data doesn't change with time.
+
+##### Stationarity criterias
+- For time series to be stationary it must fulfill three criterias
+- **Trend stationary (Zero trend)** : The series has zero trend, it isn't growing or shrinking.
+- **The variance is constant** : The average distance of the data points from the zero line isn't changing
+- **The Autocorrelation is constant** : How each value in the time series is related to its neighbors stays the same.
+
+##### Stationarity tests
 - There are also **Statistical tests for stationarity**
 - We can also convert a non stationary dataset to stationary.
 - The most common test to identify whether a time-series is non-stationary is **augmented Dicky-Fuller test**
@@ -14,7 +24,7 @@ from statsmodels.tsa.stattools import adfuller
 
 results = adfuller(df['close'])
 ```
-- The results object is a tuple. The zeroth element is the test statistics. In this case its (-1.34). The more negative this number is, its more likely that the data is stationary.
+- The results object is a tuple. The zeroth element is the test statistics. In this case its (-1.34). **The more negative this number is, its more likely that the data is stationary**.
 - 1st element is p-value : (0.60)
 If the p-value is <0.05, we reject the null hypothesis and assume that our time-series must be stationary.
 - The last item in the results object is the dictionary, this stores the critical values of the test statistics which equates the different p-values.
@@ -93,20 +103,24 @@ In moving average model, we regress the values of the time series against the pr
 ## Fitting time series models
 
 - Creating a model
+
 ```python
 from statsmodels.tsa.arima_model import ARMA
 model = ARMA(timeseries, order=(p, q))
 ```
 
 - Fitting an AR model
+
 ```python
 ar_model = ARMA(timeseries, order=(p, 0))
 ```
 
 - Fitting an MA model
+
 ```python
 ma_model = ARMA(timeseries, order=(0, q))
 ```
+
 ```python
 model = ARMA(timeseries, order=(2,1))
 results = model.fit()
@@ -125,7 +139,7 @@ print(results.summary())
 - ARMAX(1,1) model : yt = x1 * zt + a1 * y(t-1) + m1 * e(t-1) + et
 - Only difference is one additonal term zt and it's coef x1
 
-####e.g where ARMAX is useful. Imagine we need to model our own daily productivity. 
+#### e.g where ARMAX is useful. Imagine we need to model our own daily productivity. 
 - This can be an ARMA model as productivity on previous day may have affect on productivity today, you could be overworked or on a row.
 - A useful **Exogenous variable** could be the amount of sleep you have got the night before, since this might affect your productivity.
 - Here **`z1`** would be the hours slept.
@@ -289,16 +303,20 @@ mean_forecast = results.get_forecast(steps=steps).predicted_mean
 
 ### ACF
 - We can plot the autocorrelation function to get the overview of the data.
+
 <p align="center">
   <img src="./images/ACF.JPG" width="350" title="ACF">
 </p>
+
 - Bars shows that ACF values are increasing lags.If the bars are small and lie in the blue shade region, then they are not statisctically significant.
 
 ### PACF
 - Partial autocorrelation is the corelation between a time series and the lagged version of itself after we subtract the correlation at smaller lags.So it's the correlation associated with just that particular lag.
+
 <p align="center">
   <img src="./images/PACF.JPG" width="350" title="PACF">
 </p>
+
 - PACF is these series of values.
 
 ## Using the ACF and PACF to choose model order
@@ -306,6 +324,7 @@ mean_forecast = results.get_forecast(steps=steps).predicted_mean
 ### AR model
 - By comparing the ACF and PACF for time-series we can deduce the model order.If the amplitude of the ACF tails off with increasing lag and the PACF cuts off after some lag p, then we have an **AR(p) model**
 - Below plot is an **AR(2) model**
+
 <p align="center">
   <img src="./images/AR(2).JPG" width="350" title="AR(2)">
 </p>
@@ -313,6 +332,7 @@ mean_forecast = results.get_forecast(steps=steps).predicted_mean
 ### MA model
 - If the amplitutde of ACF cuts off after some lag q and the amplitude of PACF tails off then we have a **MA(q) model**
 - Below is an **MA(2) model**
+
 <p align="center">
   <img src="./images/MA(2).JPG" width="350" title="MA(2)">
 </p>
@@ -363,8 +383,126 @@ plt.show()
 </p>
 
 
+### AIC & BIC
+- ACF, PACF can't be used to choose the order of the model, when both of the orders p & q are non zero. However, there are more tools we can use, the AIC & BIC
 
+#### AIC - Akaike information criterion
+- The AIC is a metric which tells us how good a model is. **A model which makes better predictions is given a lower AIC score** . The AIC also penalizes models which have lots of parameters.
+- This means if we **set the order too high compared to the data**, we will get a high AIC value. This stops us overfitting to the training data.
 
+#### BIC - Bayesian information criterion
+- The Bayesian information criterion, or BIC, is very similar to the AIC. **Models which fit the data better have lower BICs** and the BIC penalizes over complex models.
+
+#### AIC vs BIC
+- For both of these metrics a **lower value suggests a better model**.
+- The difference between these two metrics is how much they penalize model complexity.
+- The BIC penalizes additional model orders more than AIC and so the BIC will sometimes suggest a simpler model.
+- The AIC & BIC will often choose the same model, but when they don't we have to make a choice.
+- If **our goal is to identify good predictive models** , we should use **AIC** .However if our goal is to **identify good explanatory model** , we should use BIC.
+
+#### AIC & BIC in statsmodels
+- After fitting a model, we can find the AIC, BIC by using the `summary` of the fitted model results object.
+
+```python
+# create model
+model = SARIMAX(df, order=(1, 0, 1))
+
+# fit model
+results = model.fit()
+
+# print fit summary
+print(results.summary())
+
+# OR print AIC, BIC
+print('AIC:', results.aic)
+print('BIC:', results.bic)
+```
+
+#### Searching over AIC and BIC
+- Being able to access the AIC and BIC directly means **we can write loops to fit multiple ARIMA models to a dataset** , to **find the best model order** .
+- Here we loop over AR and MA orders between zero and two, and fit each model.
+- if we want to test large number of model orders, we can append the model order and the AIC and BIC to a list, and later convert it to a dataframe.
+- This means we can sort by the AIC score and not have to search through each record.
+
+```python
+# loop over AR order
+
+order_aic_bic = []
+for p in range(3):
+    # loop over MA order
+    for q in range(3):
+        # fit model
+        model = SARIMAX(df, order=(p, 0, q))
+        results = model.fit()
+        
+        # print the model order and the AIC/BIC values
+        print(p, q, results.aic, results.bic)
+        
+        # add the model and scores to list
+        order_aic_bic.append((p, q, results.aic, results.bic))
+        
+# make dataframe of model order and AIC/BIC scores
+order_df = pd.DataFrame(order_aic_bic, columns=['p', 'q', 'aic', 'bic'])
+
+# sort by AIC
+print(order_df.sort_values('aic'))
+
+# sort by BIC
+print(order_df.sort_values('bic'))
+```
+
+#### Non stationary model orders
+- Sometimes when searching over the model orders we will attempt to fit an order that leads to an error.
+- `ValueError: Non-stationary starting autoregressive parameters found with enforce_stationarity set to True` . This ValueError tells us that we have tried to fit a model which would result in a non-stationary set of AR coefficients.
+- This is just a bad model for this data, and when we loop over p and q we would like to skip this one. We can skip these orders using try, except.
+
+```python
+for p in range(3):
+    for q in range(3):
+        try:
+            model = SARIMAX(df, order=(p, 0, q))
+            results = model.fit()
+
+            print(p, q, results.aic, results.bic)
+        except:
+            print(p, q, None, None)
+```
+
+### Model diagnostics
+- Model diagnostics to check whether model is behaving well. After we have picked a final model, we should check how good they are. This is the key part of the model building life cycle.
+
+#### Residuals
+- To diagnose our model we focus on the residuals to the training data.
+- The residuals are the difference between the our model's one step ahead predictions and the real values of the time series.
+- In statsmodels the residuals over the training period can be accessed using the `.resid` attribute of the results object. These are stored as a pandas series.
+
+```python
+model = SARIMAX(df, order=(p, d, q))
+results = model.fit()
+
+# assign residuals to variable
+residuals = results.resid
+```
+
+#### Mean absolute error
+- We might want to know on an average **how large the residuals are and so how far our predictions are from the true values**.
+- To answer this we can calculate the **mean absolute error of the residuals**
+
+```python
+mae = np.mean(np.abs(residuals))
+```
+
+#### Plot diagnostics
+- If the model fits well the residuals will be white Gaussian noise.
+
+```python
+# create the 4 diagnostics plots
+results.plot_diagnostics()
+plt.show()
+```
+
+- **Standardized residual plot** : One of the four plots shows the one-step-ahead standardized residuals. If our model is working correctly, there should be no obvious structure in the residuals.
+- 
 
 
 
