@@ -473,7 +473,7 @@ for p in range(3):
 
 #### Residuals
 - To diagnose our model we focus on the residuals to the training data.
-- The residuals are the difference between the our model's one step ahead predictions and the real values of the time series.
+- **The residuals are the difference between the our model's one step ahead predictions and the real values of the time series**.
 - In statsmodels the residuals over the training period can be accessed using the `.resid` attribute of the results object. These are stored as a pandas series.
 
 ```python
@@ -493,6 +493,7 @@ mae = np.mean(np.abs(residuals))
 ```
 
 #### Plot diagnostics
+- For ideal model the residuals should be uncorrelated white Gaussian noise centered on zero. The rest of the diagnostics will help us to see if this is true.
 - If the model fits well the residuals will be white Gaussian noise.
 
 ```python
@@ -501,40 +502,220 @@ results.plot_diagnostics()
 plt.show()
 ```
 
+##### Standardized residual plot
 - **Standardized residual plot** : One of the four plots shows the one-step-ahead standardized residuals. If our model is working correctly, there should be no obvious structure in the residuals.
-- 
 
+<p align="center">
+  <img src="./images/standardized_residuals.PNG" width="350" title="standardized_residuals">
+</p>
 
+##### Histogram plus estimated density
+- **Histogram plus estimated density** : Shows us the distribution of the residuals. The histogram shows us the measured distribution; the orange line shows a smoothed version of this histogram; and the green line shows a normal distribution.
 
+<p align="center">
+  <img src="./images/histogram.PNG" width="350" title="histogram">
+</p>
 
+- **If our model is good these two lines should be almost the same**.
 
+##### Normal Q-Q
+- The normal Q-Q plot is another way to show how the distribution of the model residuals compares to a normal distribution. If our residuals are normally distributed then all the points should lie around the red line, except perhaps some values at either end.
 
+<p align="center">
+  <img src="./images/q-q.PNG" width="350" title="Q-Q plot">
+</p>
 
+##### Correlogram
+- **ACF plot of the residuals** rather than the data.
+- 95% of the correlations for lag greater than zero should not be significant. If there is significant correlation in the residuals, **it means that there is information in the data that our model hasn't captured** .
 
+<p align="center">
+  <img src="./images/correlogram.PNG" width="350" title="correlogram">
+</p>
 
+#### Summary statistics
+- Some of these plots also have accompanying test statistics in `results.summary()` 
 
+```python
+print(results.summary())
+```
 
+<p align="center">
+  <img src="./images/stats.PNG" width="350" title="summary_stats">
+</p>
 
+- **Prob(Q)** - is the p-value associated with the null hypothesis that the residuals have no correlation structure.
+- **Prob(JB)** - is the p-value associated with the null hypothesis that the residuals are Guassian normally distributed.
+- If either **p-value** is less than **0.05** we reject that hypothesis.
 
+### Box-Jenkins method
+- Building time series models can represent a lot of work for the modeler and so we want to maximize our ability to carry out these projects fast, efficiently and rigorously. This is where the Box-Jenkins method comes in.
+- Box-Jenkins method is a kind of checklist for us to go from raw data to a model ready for production. 
+- The 3 main steps that stand between us and production-ready model are **identification, estimation and model diagnostics** .
 
+#### Identification
+- In the identification step we explore and characterize the data to find some form of it which is appropriate to ARIMA modeling.
+- We need to know whether the time series is stationary and find which transformations such as differencing or taking the log of the data, will make it stationary.
+- Once we have found a stationary form, we must identify which orders p and q are the most promising.
 
+##### Identification tools
+- Our tools to test for stationarity include plotting the time series and using the augmented Dicky-Fuller test. `df.plot()` , `adfuller()`
+- Then we can take the **difference or apply transformations** until we find the simplest set of transformations that make the time series stationary. `df.diff(), np.log(), np.sqrt()`
+- Finally, we use the ACF and PACF to identify promising model orders. `plot_acf() , plot_pacf()`
 
+#### Estimation
+- The next step is estimation, which involves using numerical methods to estimate the AR and MA coefficients of the data.
+- This is automatically done for us when we call the `model.fit()` method
+- At this stage we might fit many models and use the AIC and BIC to narrow down to more promosing candidates. `results.aic , results.bic`
 
+#### Model diagnostics
+- In the model diagnostics step, we evaluate the quality of the best fitting model.
+- Here is where we use our test statistics and diagnostics plots to make sure the residuals are well behaved.
+- Are the residuals uncorrelated
+- Are residuals normally distributed `results.plot_diagnostics()` , `results.summary()`
 
+#### Decision
+- Using the information gathered from statistical tests and plots during the diagnostics step, we need to make a decision. Is the model good enough or do we need to go back and rework it.
+- If the residuals aren't as they should be we will go back and rethink our choices in the earlier steps. If the residuals are okay then we can go ahead and make forecasts. `results.get_forecast()`
 
+#### Box-Jenkins
+- This should be our general project workflow when developing time series models.
+- We may have to repeat the process a few times in order to build a model that fits well.
 
+### Seasonal time series
+- A seasonal time series has predictable patterns that repeat regularly. Although, we call this feature seasonality, it can repeat after any length of time. 
+- These seasonal cycles might repeat every year like sales of suncream, or every week like number of visitors to a park, or everyday like number of users on a website at any hour.
 
+#### Seasonal decomposition
+- Below is monthly US candy production, which has a regular cycle that repeats every year. We can think of this, or any time series, as being made of 3 parts.
+ **The trend, the seasonal component, and the residual** .
 
+<p align="center">
+  <img src="./images/seasonal.PNG" width="350" title="seasonal decomposition">
+</p>
 
+- The full time series is these 3 parts added together. `time series = trend + seasonal + residual`
 
+#### Seasonal decomposition using statsmodels
+- We can use statsmodels `seasonal_decompose` function to separate out any time series into these three components. We have to set the **period parameter** which is number of data points in each repeated cycle. Here our cycle repeats every 12 steps. This function returns a decompose results object.
+- We can use the plot method of this object to plot the components. 
+- Inorder to decompose the data, we need to know how often the cycles repeat. Often we will be able to guess this, but we can also use the ACF to identify the period.
 
+```python
+from statsmodels.tsa.seasonal import seasonal_decompose
 
+# decompose data
+decomp_results = seasonal_decompose(df['IPG3113N'], period=12)
 
+# plot the decomposed data
+decomp_results.plot()
+plt.show()
+```
 
+#### Finding seasonal period using ACF
 
+<p align="center">
+  <img src="./images/seasonal_acf.PNG" width="350" title="seasonal decomposition">
+</p>
 
+- The above ACF shows a periodic correlation pattern. To find the period we look for a **lag greater than one**, which is a peak in the ACF plot.
+- Here, there is a peak at 12 lags and so this means that the seasonal components repeats every 12 time steps.
+- Sometimes it can be hard to tell by eye whether a time series is seasonal or not. This is where the ACF is useful.
 
+#### Identifying seasonal data using ACF
 
+<p align="center">
+  <img src="./images/production.PNG" width="350" title="seasonal decomposition">
+</p>
+
+- Above is the monthly number of vehicles registered in the US. We could take this time series and plot the ACF directly, but since the time series is non-stationary, the ACF plot will be clearer if we detrend it first.
+- We have detrended time series before by taking the difference. However, this time we are only trying to find the period of the time series, and the ACF plot will be clearer if we just subtract the rolling mean. Any large window size N will work for this.
+- We subtract this from the original time series and drop the NA values. The time series is now stationary and it will be easier to interpret the ACF plot.
+
+```python
+# subtract long rolling average over N steps
+
+df = df - df.rolling(N).mean()
+
+# create figure
+fig, ax = plt.subplots(1, 1, figsize=(8,4))
+
+# plot ACF
+plot_acf(df.drop(), ax=ax, lags=25, zero=False)
+plt.show()
+```
+
+<p align="center">
+  <img src="./images/acf2.PNG" width="350" title="seasonal decomposition">
+</p>
+
+- We plot the ACF of the detrended data and we can clearly see that there is a seasonal period of 12 steps.
+
+#### ARIMA models and seasonal data
+- Since the data is seasonal we will always have correlated residuals left if we try to fit and ARIMA model to it. This means we aren't using all the information in the data, and so we aren't making the bsest predictions possible.
+
+#### SARIMA models
+- A SARIMA or seasonal arima models is used for seasonal time series.
+- Fitting a SARIMA model is like fitting two different ARIMA models at once, one to the seasonal part and another to the non-seasonal part. `SARIMA(p, d, q)(P, D, Q)s`
+- Since we have these two models we will have two sets of orders. We have non-seasonal orders for the autoregressive, difference and moving average parts.
+- **Non-seasonal orders** : `p: autoregressive order ; d: differencing order ; q: moving average order`
+- **Seasonal Orders** : `P : seasonal autoregressive order ; D: seasonal differencing order ; Q : seasonal moving average order ; S: number of time steps per cycle`
+- There is also a new order `S` , which is the length of the seasonal cycle.
+
+#### SARIMA vs ARIMA models
+- ARIMA(2,0,1) : `y = a1*y(t-1) + a2 * y(t-2) + m1 e(t-1) + et` . We regress the time series against itself at lags-1 and 2 against the shock at lag-1.
+- SARIMA(0, 0, 0)(2, 0, 1) model: `yt =a7 * y(t-7) + a14 * y(t -14) + m7 * e(t-7) + et` . This is the equation for a simple SARIMA model with season length of 7 days. This SARIMA model only has a seasonal part; we have set the non-seasonal orders to zero.
+- We regress the time series against itself at lags of one season and two seasons and against the shock at lag of one season.
+- This particular SARIMA model will be able to capture seasonal weekly patterns, but wont be able to capture local, day to day patterns.
+- If we construct a SARIMA model and include non-seasonal orders as well, then we can capture both of these patterns.
+
+#### Fitting a SARIMA model
+- Fitting a SARIMA model is almost the same as fitting an ARIMA model. We import the model object and fit it.
+- The only difference is that we have to specify the seasonal order as well as the regular order when we instantiate the model. This means that there are a lot of model orders we need to find.
+- The seasonal period S is found using the ACF.
+
+```python
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+# instantiate model
+model = SARIMAX(df, order=(p, d, q), seasonal_order=(P,D,Q,S))
+
+# fit model
+results = model.fit()
+```
+
+#### Seasonal differencing
+- The next task is to find the order of differencing. To make a time series stationary we may need to apply seasonal differencing.
+- In seasonal differencing, **instead of subtracting the most recent time series value, we subtract the time series value from one cycle ago** . `delta yt = yt - y(t-s)`
+- We can take the seasonal difference by using the `.diff()` method. This time we pass in an integer S, the length of the seasonal cycle.
+
+```python
+# take the seasonal difference
+
+df_diff = df.diff(S)
+```
+
+#### Differencing for SARIMA models
+- If the time series **shows a trend then we take the normal difference** .If there is a **strong seasonal cycle, then we will also take the seasonal difference** .
+- Once we have found the two orders of differencing, and made the time series stationary, we need to find the other model orders. To find the **non-seasonal orders** , we plot the **ACF and the PACF of the differenced time series** .
+
+#### Finding P & Q
+- To find the seasonal orders we plot the ACF and PACF of the differenced time series at multiple seasonal steps. Then we can use the **table of ACF and PACF rules** to work out the seasonal order.
+
+#### Plotting seasonal ACF and PACF
+- This plots ACF and PACF at the specific lags only.
+
+```python
+fig, (ax1, ax2) = plt.subplots(2,1)
+
+# plot seasonal ACF
+plot_acf(df_diff, lags=[12,24,36,48,60,72], ax=ax1)
+
+# plot seasonal PACF
+plot_pacf(df_diff, lags=[12,24,36,48,60,72], ax=ax2)
+
+plt.show()
+```
 
 
 
