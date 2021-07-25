@@ -14,6 +14,7 @@ from statsmodels.tsa.stattools import adfuller
 
 results = adfuller(df['close'])
 ```
+
 - The results object is a tuple. The zeroth element is the test statistics. In this case its (-1.34). The more negative this number is, its more likely that the data is stationary.
 - 1st element is p-value : (0.60)
 If the p-value is <0.05, we reject the null hypothesis and assume that our time-series must be stationary.
