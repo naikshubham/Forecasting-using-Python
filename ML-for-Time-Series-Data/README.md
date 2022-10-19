@@ -250,6 +250,377 @@ for spec in spectrograms:
 X = np.column_stack([means, stds, maxs, tempo_mean, tempo_max, tempo_std, bandwidths_all, centroids_all])
 ```
 
+#### Predicting Time Series Data
+- Ridge regression useful if we have noisy or correlated variables.
+
+#### Advanced time series prediction
+
+##### Cleaning and Improving data
+- Always understand the source of strange patterns in the data
+- **Interpolation** : A common way to deal with missing data is to interpolate missing values
+- Using a rolling window to transform data
+
+##### Interpolation in Pandas
+
+```python
+# create a mask that return a boolean where missing values are
+missing = prices.isna()
+
+# interpolate linearly to fill missing values
+prices_interp = prices.interpolate('linear')
+
+# plot the interpolated data in red and the data with missing values in black
+ax = prices_interp.plot(c='r')
+prices.plot(c='k', ax=ax, lw=2)
+```
+
+
+#### Transforming data to standardize variance
+- Using a rolling window, we'll calculate each timepoint's percent change over the mean of a window of previous timepoints. This standardizes the variance of our data and reduces long-term drift.
+- A common transformation to apply to data is to standardize its mean and variance over time. There are many ways to do this.
+- Convert dataset so that each point represents the % change over a previous window.
+- this makes timepoints more comparable to one another if the absolute values of data change a lot.
+
+##### Transforming to percent change with Pandas
+
+```python
+def percent_change(values):
+    '''Calculate the %change between the last value and the mean of previous values'''
+    # separate the last value and all previous values into variables
+    previous_values = values[:-1]
+    last_value = values[-1]
+    
+    # calculate the % diff betwn the last value and the mean of earlier values
+    percent_change = (last_value - np.mean(previous_values)) / np.mean(previous_values)
+    return percent_change
+```
+
+#### Applying this to our data
+- We can apply this to our data using the `.aggregate()` method, passing our function as an input.
+
+#### Finding outliers in data
+- **Outlier** : A common definition is any datapoint that is more than three standard deviations away from the mean of the dataset
+- They can have negative effects on the predictive power of our model, biasing it away from its "true" value
+
+#### Plotting a threshold on our data
+
+```python
+fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+for data, ax in zip([prices, prices_perc_change], axs):
+    this_mean = data.mean()
+    this_std = data.std()
+    
+    # plot the data, with a window that is 3 std dev around the mean
+    data.plot(ax=ax)
+    ax.axhline(this_mean + this_std * 3, ls='--', c='r')
+    ax.axhline(this_mean - this_std * 3, ls='--', c='r')
+```
+
+##### Replacing outliers with the median
+
+```python
+# center the data so the mean is 0
+prices_outlier_centered = prices_outlier_perc - prices_outlier_perc.mean()
+
+# calculate std dev
+std = prices_outlier_perc.std()
+
+# use the abs value of each data point to make it easier to find outliers
+outliers = np.abs(prices_outlier_centered) > (std *3)
+
+# replace outliers with the median value
+prices_outlier_fixed = prices_outlier_centered.copy()
+prices_outlier_fixed[outliers] = np.nanmedian(prices_outlier_fixed) # calculates the median without being hindered by missing values
+```
+
+#### Creating features with windows
+- Rolling window can be used to extract features as they change over time.
+- In pandas, the `.aggregate()` method can be used to calculated many features of a window at once. By passing a list of functions to the method, each function will be called on the window, and collected in the output. 
+
+```python
+feats = prices.rolling(20).aggregate([np.std, np.max]).dropna()
+```
+
+#### Percentile summarizes data
+- A useful tool for feature extraction is the percentile function. This is similar to calculating the mean or median of your data, but it gives more fine-grained control over what is extracted.
+- For a given dataset, the Nth percentile is the value where N% of the data is below that datapoint, and 100-N% of the data is above that datapoint.
+
+```print(np.percentile(np.linspace(0, 200), q=20))```
+
+##### Combining np.percentile() with partial functions to calculate a range of percentiles
+
+```python
+data = np.linspace(0, 100)
+
+# create a list of functions using a list comprehension
+percentile_funcs = [partial(np.percentile, q=ii) for ii in [20, 40, 60]]
+
+# calculate the output of each function in the same way
+percentiles = [i_func(data) for i_func in percentile_funcs]
+
+# calculate multiple percentiles of a rolling window
+data.rolling(20).aggregate(percentiles)
+```
+
+##### Calculating "date-based" features
+
+
+### Creating features from the past
+
+#### Time-delayed features and auto-regressive models
+- Defining high-quality and relevant features gives our model the best chance at finding useful patterns in the data.
+
+##### The past is useful
+- Perhaps the biggest difference between "time-series" data and "non-timeseries" data is the relationship between data points. Because the data has a linear flow(matching the progression of time), patterns will persists over a span of datapoints. As a result, we can use information from the past in order to predict values in the future.
+- Timeseries data almost always have information that is shared between timepoints
+- Often the features best-suited to predict a timeseries are previous values of the same timeseries
+
+##### A note on smoothness and auto-correlation
+- It's important to consider how "smooth" our data is when fitting models with time series.
+- The smoothness of our data reflects how much correlation there is between one time point and those that come before and after it. AKA, how correlated is a timepoint with its neighboring timepoints(called autocorrelation)
+- The amount of auto-correlation in data will impact our models. AKA, the extent to which previous timepoints are predictive of subsequent timepoints is often described as "autocorrelation", and can have a big impact on the performance of our model.
+
+#### Creating time-lagged features
+- Let's see how we can build a model that uses values in the past as input features 
+- Remember that regression models will assign a "weight" to each input feature, and we can use these weights to determine how "smooth" or "autocorrelated" the signal is.
+
+##### Time-shifting data with Pandas
+- `df.shift(3)`
+
+- **Creating a time-shifted dataframe**
+
+```python
+data = pd.Series(...)
+
+# shifts
+shifts = [0,1,2,3,4,5,6,7]
+
+# create a dict of time-shifted data
+many_shifts = {'lag_{}'.format(ii):data.shift(ii) for ii in shifts}
+
+many_shifts = pd.DataFrame(many_shifts)  #convert to dataframe
+```
+
+#### Fitting a model with time-shifted features
+
+```python
+# fit the model using these input features
+model = Ridge()
+model.fit(many_shifts, data)
+```
+
+- fit a scikit learn regression model. `many_shifts` is simply a time shifted version of the timeseries contained in the 'data' variable.
+- We'll fit the model using Ridge regression, which spreads out weights across features (if applicable) rather than assign it all to a single feature
+
+#### Interpreting the auto-regressive model coefficents
+
+```python
+# visualize the fit model coefficients
+fig, ax = plt.subplots()
+ax.bar(many_shifts.columns, model.coef_)
+ax.set(xlabel='Coefficent name', ylabel='Coefficient value')
+
+plt.setp(ax.get_xticklabels(), rotation=45, horizontalalignment='right')
+```
+
+- Once we fit the model, we can investigate the coefficients it has found.
+- **Larger absolute values of coefficients mean that a given feature has a large impact on the output variable**
+- We can use a barplot the visualize the model's coefficients that were created after fitting the model.
+
+### Stationarity and stability
+- A stationary signal is one that does not change its statistical properties over time. It has the same mean, standard deviation, and general trend. A non-stationary signal does change its properties over time. Almost all real world data are non stationary.
+
+#### Model stability
+- Most models have an implicit assumption that the relationship between input and outputs is static. If this relationship changes (because the data is non stationary), then the model will generate predictions using an outdated relationship between inputs and outputs.
+- Non-stationary data results in variability in our model. The statistical properties the model finds may change with the data. How can we quantify and correct for this?
+
+#### Cross validation to quantify parameter stability
+- One approach is to use cross-validation, which yields a set of model coefficents per iteration. We can quantify the variability of these coefficients across iterations.
+- If a model's coefficients vary widely between cross-valiadtion splits, there's a good chance the data is non-stationary(or noisy)
+
+#### Bootstrapping the mean
+- Bootstrapping is a common way to assess variability
+- Bootstrapping is a way to estimate the confidence in the mean of a collection of numbers.
+- To bootstrap : 
+- 1. Take a random sample of data with replacement
+- 2. Calculate the mean of the sample
+- 3. Repeat this process many times (1000s)
+- 4. Calculate the percentiles of the result(usually 2.5, 97.5)
+The result is a 95% confidence interval of the mean of each coefficient
+
+- The lower and upper percentiles represent the variability of the mean.
+
+```python
+from sklearn.utils import resample
+
+# cv_coefficients has shape (n_cv_folds, n_coefficients)
+n_boots = 100
+bootstrap_means = np.zeros(n_boots, n_coefficients)
+for ii in range(n_boots):
+    # generate random indices for our data with replacement
+    # then take the sample mean
+    random_sample = resample(cv_coefficients)
+    bootstrap_means[ii] = random_sample.mean(axis=0)
+    
+# compute the percentiles of choice for the bootstrapped means
+percentiles = np.percentile(bootstrap_means, (2.5, 97.5), axis=0)
+```
+
+#### Plotting the bootstrapped coefficients
+
+```python
+fig, ax = plt.subplots()
+ax.scatter(many_shifts.columns, percentiles[0], marker='_', s=200)
+ax.scatter(many_shifts.columns, percentiles[1], marker='_', s=200)
+```
+
+- Plot the lower and upper bounds of the 95% confidence intervals. This gives us and idea for the variability of the mean across all cross-validated iterations.
+
+#### Assessing model performance stability
+- It's also common to quantify the stability of a model's predictive power across cross-validation folds
+- Calculate the predictive power of the model over cross-validation splits.
+
+##### Model performance over time
+
+```python
+def my_corrcoef(est, X, y):
+    """return the correlation coefficient betwn model predictions and      validation set"""
+    return np.corrcoef(y, est.predict(X))[1,0]
+    
+# grab the date of the first index of each validation set
+first_indices = [data.index[tt[0]] for tr, tt in cv.split(X, y)]
+
+# calculate the CV scores and convert to a Pandas Series
+cv_scores = cross_val_score(model, X, y, cv=cv, scoring=my_corrcoef)
+cv_scores = pd.Series(cv_scores, index=first_indices)
+```
+
+- Because the cross-validation splits happen linearly over time, we can visualize the results as a time series.
+- If we see large changes in the predictive power of a model at one moment in time, it could be because the statistics of the data have changed.
+- Here we create a rolling mean of our cross-validation scores and plot it with matplotlib
+
+```python
+fig, axs = plt.subplots(2, 1, figsize=(10, 5), sharex=True)
+
+# calculate a rolling mean of scores over time
+cv_scores_mean = cv_scores.rolling(10, min_periods=1).mean()
+cv_scores.plot(ax=axs[0])
+axs[0].set(title='Validation scores (correlation)', ylim=[0,1])
+
+# plot the raw data
+data.plot(ax=axs[1])
+axs[1].set(title='Validation data')
+```
+
+- There can be dips in middle, because statistics of data changes. To avoid this `one option is to restrict the size of the training window`
+- This ensures that only the latest datapoints are used in training. We can control this with the `max_train_size` parameter.
+
+```python
+# only keep the last 100 datapoints in the training data
+window=100
+
+# initialize the cv with the window size
+cv = TimeSeriesSplit(n_splits=10, max_train_size=window)
+```
+
+- Revisting our visualization from before, we see that restricting the training window slighlty improves the dip in performance in the middle of our validation data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
